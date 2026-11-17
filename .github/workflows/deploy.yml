@@ -28,9 +28,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-    defaults:
-      run:
-        working-directory: backend
+    # No job-wide working-directory: the skip step runs before checkout, when backend/
+    # does not exist yet. Only the deploy step needs it.
     steps:
       - name: Skip when Fly is not configured yet
         if: env.FLY_API_TOKEN == ''
@@ -48,4 +47,5 @@ jobs:
 
       - name: Deploy
         if: env.FLY_API_TOKEN != ''
+        working-directory: backend
         run: flyctl deploy --remote-only
