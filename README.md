@@ -1,5 +1,7 @@
 # Aztec List
 
+> Originally built as a team project for CompE 561 (Fall 2025) at San Diego State University with [hyp5253](https://github.com/hyp5253), [Bmustoe](https://github.com/Bmustoe), and [AntonioHengel7](https://github.com/AntonioHengel7). The original repository, including its full issue and pull-request history, lives at [SDSU-CompE-561-Fall-2025/aztec-list](https://github.com/SDSU-CompE-561-Fall-2025/aztec-list).
+
 ## Overview
 
 Aztec List is an OfferUp-style marketplace for college students. Students can post items with photos and descriptions, browse/search listings, and (in later iterations) coordinate sales via messaging. Prices are typically lower than MSRP.
@@ -26,7 +28,7 @@ This is a monorepo containing both backend and frontend:
 
 ```bash
 # 1) Clone
-git clone https://github.com/SDSU-CompE-561-Fall-2025/aztec-list.git
+git clone https://github.com/xZanderBR/aztec-list.git
 cd aztec-list
 
 # 2) Configure backend environment variables
