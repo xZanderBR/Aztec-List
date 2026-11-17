@@ -92,7 +92,8 @@ async def start() -> asyncio.Task[None]:
 
 
 async def stop(task: asyncio.Task[None]) -> None:
-    """Cancel the reset loop on shutdown."""
+    """Cancel the reset loop on shutdown and wait for it to finish."""
     task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await task
+    (outcome,) = await asyncio.gather(task, return_exceptions=True)
+    if isinstance(outcome, Exception):  # anything other than the expected cancellation
+        logger.warning("Demo reset loop ended with an error: %r", outcome)

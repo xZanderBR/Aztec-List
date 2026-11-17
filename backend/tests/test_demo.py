@@ -1,5 +1,6 @@
 """Tests for sandbox demo mode: config, persona login, guards, seed and reset."""
 
+import asyncio
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -218,3 +219,16 @@ class TestSchedule:
         monkeypatch.setattr(settings.demo, "enabled", True)
         assert ai_rate_limit() != normal
         assert "/day" in ai_rate_limit()
+
+
+@pytest.mark.unit
+class TestStop:
+    @pytest.mark.asyncio
+    async def test_stop_cancels_the_reset_loop(self) -> None:
+        async def forever() -> None:
+            await asyncio.sleep(3600)
+
+        task = asyncio.create_task(forever())
+        await asyncio.sleep(0)  # let it start
+        await scheduler.stop(task)
+        assert task.cancelled()
