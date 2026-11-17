@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from starlette.requests import Request
 
 from app.core.rate_limiter import client_ip
-from app.core.settings import Settings, StorageSettings
+from app.core.settings import DatabaseSettings, Settings, StorageSettings
 
 SAFE_PROD = {
     "app": {"environment": "production"},
@@ -81,3 +81,26 @@ class TestClientIp:
 
     def test_falls_back_to_socket_address(self) -> None:
         assert client_ip(_request({})) == "10.0.0.1"
+
+
+@pytest.mark.unit
+class TestDatabaseUrl:
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            ("postgresql://u:p@db:5432/app", "postgresql+psycopg2://u:p@db:5432/app"),
+            ("postgres://u:p@db:5432/app", "postgresql+psycopg2://u:p@db:5432/app"),
+            ("postgresql+psycopg2://u:p@db/app", "postgresql+psycopg2://u:p@db/app"),
+            ("postgresql+psycopg://u:p@db/app", "postgresql+psycopg://u:p@db/app"),
+            ("sqlite:////data/aztec_list.db", "sqlite:////data/aztec_list.db"),
+        ],
+    )
+    def test_plain_postgres_urls_use_psycopg2(self, url: str, expected: str) -> None:
+        assert DatabaseSettings(database_url=url).database_url == expected
+
+    def test_engine_builds_for_plain_postgres_url(self) -> None:
+        from sqlalchemy import create_engine
+
+        url = DatabaseSettings(database_url="postgresql://u:p@localhost:5432/app").database_url
+        engine = create_engine(url)  # no connection is made; only the driver import is checked
+        assert engine.dialect.driver == "psycopg2"

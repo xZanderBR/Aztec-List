@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.enums import LogLevel
@@ -78,6 +78,23 @@ class DatabaseSettings(BaseModel):
         default="sqlite:///./aztec_list.db",
         description="Database connection URL (PostgreSQL, SQLite, etc.)",
     )
+
+    @field_validator("database_url")
+    @classmethod
+    def _pin_postgres_driver(cls, url: str) -> str:
+        """
+        Point plain Postgres URLs at the installed psycopg2 driver.
+
+        SQLAlchemy 2.1 made psycopg (v3) the default driver for ``postgresql://`` URLs, but
+        this project ships ``psycopg2-binary``. Hosts (Neon, Heroku, docker-compose) hand
+        out plain ``postgresql://`` or ``postgres://`` URLs, so map both to
+        ``postgresql+psycopg2://``. URLs that already name a driver are left alone.
+        """
+        for prefix in ("postgresql://", "postgres://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg2://" + url.removeprefix(prefix)
+        return url
+
     echo: bool = Field(
         default=False,
         description="Echo SQL statements to console (useful for debugging)",
