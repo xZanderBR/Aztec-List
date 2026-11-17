@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.enums import LogLevel
@@ -78,6 +78,22 @@ class DatabaseSettings(BaseModel):
         default="sqlite:///./aztec_list.db",
         description="Database connection URL (PostgreSQL, SQLite, etc.)",
     )
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_psycopg_driver(cls, url: str) -> str:
+        """
+        Point plain Postgres URLs at the installed psycopg (v3) driver.
+
+        Hosts hand out ``postgres://`` (Heroku style, which SQLAlchemy rejects) or plain
+        ``postgresql://`` URLs; map both to ``postgresql+psycopg://`` so the driver is
+        explicit. URLs that already name a driver are left alone.
+        """
+        for prefix in ("postgresql://", "postgres://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url.removeprefix(prefix)
+        return url
+
     echo: bool = Field(
         default=False,
         description="Echo SQL statements to console (useful for debugging)",

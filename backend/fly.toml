@@ -13,9 +13,9 @@
 #   fly deploy
 #
 # Secrets are injected as env vars at runtime; only non-sensitive config lives in [env].
-# Replace azteclist.example.com with the real frontend domain before deploying.
+# Live at https://azteclist.com (frontend, Vercel) and https://api.azteclist.com (this app).
 
-app = "aztec-list-api"
+app = "azteclist-api"
 primary_region = "iad"
 
 [build]
@@ -39,8 +39,8 @@ primary_region = "iad"
   LLM__ANTHROPIC_MODEL = "claude-haiku-5-5"
   LLM__ANTHROPIC_EFFORT = "low"
   DEMO__ENABLED = "true"
-  CORS__ALLOWED_ORIGINS = '["https://azteclist.example.com"]'
-  CORS__FRONTEND_URL = "https://azteclist.example.com"
+  CORS__ALLOWED_ORIGINS = '["https://azteclist.com", "https://www.azteclist.com"]'
+  CORS__FRONTEND_URL = "https://azteclist.com"
 
 [http_service]
   internal_port = 8000

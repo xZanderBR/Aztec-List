@@ -4,7 +4,7 @@ name: Deploy API
 # The frontend deploys separately through Vercel's Git integration.
 #
 # Setup: create an app-scoped deploy token and store it as the FLY_API_TOKEN repo secret:
-#   fly tokens create deploy --app aztec-list-api
+#   fly tokens create deploy --app azteclist-api
 # Until that secret exists, this workflow skips instead of failing.
 
 on:
