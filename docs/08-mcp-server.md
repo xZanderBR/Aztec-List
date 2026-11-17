@@ -16,7 +16,7 @@ logic (which also proves those services are cleanly factored).
 
 ## How it works
 
-- `src/app/mcp_server/server.py` builds a `FastMCP` server and registers the tools. Each tool
+- `src/app/mcp_server/server.py` builds an `MCPServer` (mcp SDK v2) and registers the tools. Each tool
   opens a session via the app's `SessionLocal`, calls `listing_service`, and returns serialized
   schema objects.
 - `scripts/mcp_server.py` is the entry point: it puts `src` on the path, imports the app so all
