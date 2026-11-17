@@ -42,7 +42,7 @@ This is a monorepo containing both backend and frontend:
 
 ```bash
 # 1) Clone
-git clone https://github.com/xZanderBR/aztec-list.git
+git clone https://github.com/xZanderBR/Aztec-List.git
 cd aztec-list
 
 # 2) Configure backend environment variables

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FlaskConical } from "lucide-react";
 import { useAppConfig } from "@/hooks/useAppConfig";
 
-export const REPO_URL = "https://github.com/xZanderBR/aztec-list";
+export const REPO_URL = "https://github.com/xZanderBR/Aztec-List";
 
 /** "3h 12m" / "12m" until the given ISO time (never negative). */
 export function formatTimeUntil(iso: string, now: number): string {
