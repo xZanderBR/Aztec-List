@@ -1,9 +1,14 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.enums import LogLevel
+
+# backend/ (this file lives at backend/src/app/core/settings.py)
+_BACKEND_ROOT = Path(__file__).resolve().parents[3]
+_JWT_PLACEHOLDER = "CHANGE_ME_generate_a_secure_random_key_here"
 
 
 class AppMeta(BaseModel):
@@ -20,10 +25,18 @@ class AppMeta(BaseModel):
         ),
     )
 
+    expose_docs: bool = Field(
+        default=False,
+        description=(
+            "Keep /docs, /redoc and /openapi.json available in production (e.g. for a public "
+            "portfolio demo). Off by default so production hides the API surface."
+        ),
+    )
+
     @model_validator(mode="after")
     def _hide_docs_in_prod(self) -> "AppMeta":
-        """In production, force-disable interactive docs even if explicitly set."""
-        if self.environment.lower() == "production":
+        """In production, force-disable interactive docs unless explicitly exposed."""
+        if self.environment.lower() == "production" and not self.expose_docs:
             self.docs_url = None
             self.redoc_url = None
         return self
@@ -33,10 +46,15 @@ class AppMeta(BaseModel):
         """Whether the app is running in a production deployment."""
         return self.environment.lower() == "production"
 
+    @property
+    def openapi_enabled(self) -> bool:
+        """Whether the OpenAPI schema (backing /docs and /redoc) should be served."""
+        return not self.is_production or self.expose_docs
+
 
 class JWTSettings(BaseModel):
     secret_key: str = Field(
-        default="CHANGE_ME_generate_a_secure_random_key_here",
+        default=_JWT_PLACEHOLDER,
         min_length=32,
         description="The secret key for JWT (configure via environment variable)",
     )
@@ -118,13 +136,21 @@ class ListingSettings(BaseModel):
 class StorageSettings(BaseModel):
     """File storage configuration for uploaded images."""
 
+    root: str = Field(
+        default=str(_BACKEND_ROOT / "uploads"),
+        description=(
+            "Root directory served at /uploads. Listing images and profile pictures live in "
+            "its images/ and profiles/ subdirectories unless overridden below. Point this at "
+            "a persistent volume in production (e.g. /data/uploads)."
+        ),
+    )
     upload_dir: str = Field(
-        default="uploads/images",
-        description="Directory for storing uploaded images (relative to backend root)",
+        default="",
+        description="Directory for listing images (default: {root}/images)",
     )
     profile_upload_dir: str = Field(
-        default="uploads/profiles",
-        description="Directory for storing profile pictures (relative to backend root)",
+        default="",
+        description="Directory for profile pictures (default: {root}/profiles)",
     )
     max_file_size_mb: int = Field(
         default=5,
@@ -140,6 +166,15 @@ class StorageSettings(BaseModel):
         default=["image/jpeg", "image/png", "image/webp", "image/gif"],
         description="Allowed MIME types for image uploads",
     )
+
+    @model_validator(mode="after")
+    def _derive_subdirs(self) -> "StorageSettings":
+        """Default the image/profile directories to subdirectories of ``root``."""
+        if not self.upload_dir:
+            self.upload_dir = str(Path(self.root) / "images")
+        if not self.profile_upload_dir:
+            self.profile_upload_dir = str(Path(self.root) / "profiles")
+        return self
 
 
 class CORSSettings(BaseModel):
@@ -461,6 +496,26 @@ class Settings(BaseSettings):
     vector: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     sentry: SentrySettings = Field(default_factory=SentrySettings)
+
+    @model_validator(mode="after")
+    def _refuse_unsafe_production(self) -> "Settings":
+        """Fail fast instead of booting production with dev-only defaults."""
+        if not self.app.is_production:
+            return self
+        problems = []
+        if self.jwt.secret_key == _JWT_PLACEHOLDER:
+            problems.append("JWT__SECRET_KEY is still the placeholder")
+        if self.test.test_mode:
+            problems.append(
+                "TEST__TEST_MODE must be false (it exposes unauthenticated admin promotion)"
+            )
+        local = ("http://localhost", "http://127.0.0.1")
+        if any(origin.startswith(local) for origin in self.cors.allowed_origins):
+            problems.append("CORS__ALLOWED_ORIGINS still contains a localhost origin")
+        if problems:
+            msg = "Refusing to start in production: " + "; ".join(problems)
+            raise ValueError(msg)
+        return self
 
 
 @lru_cache

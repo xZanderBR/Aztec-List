@@ -22,7 +22,7 @@ This is a monorepo containing both backend and frontend:
 ### Requirements
 
 - [uv](https://docs.astral.sh/uv/) installed
-- Python **3.13** (recommended). `uv python install` will fetch it for you.
+- Python **3.14** (recommended). `uv python install` will fetch it for you.
 
 ### Steps
 

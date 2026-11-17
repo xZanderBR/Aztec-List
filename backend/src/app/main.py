@@ -36,7 +36,7 @@ init_sentry()
 # StaticFiles raises at construction time if the directory is missing, and the mount
 # call runs at import. Creating it lazily in `lifespan` is too late (e.g. fresh CI
 # checkouts have no uploads/ and would crash before lifespan ever fires).
-upload_dir = Path(__file__).parent.parent.parent / "uploads"
+upload_dir = Path(settings.storage.root)
 upload_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -70,8 +70,8 @@ app = FastAPI(
     docs_url=settings.app.docs_url,
     redoc_url=settings.app.redoc_url,
     # Hide the OpenAPI schema in production - it's only useful for /docs and /redoc,
-    # which are also off (set via AppMeta._hide_docs_in_prod).
-    openapi_url=None if settings.app.is_production else "/openapi.json",
+    # which are also off (set via AppMeta._hide_docs_in_prod) unless APP__EXPOSE_DOCS=true.
+    openapi_url="/openapi.json" if settings.app.openapi_enabled else None,
     lifespan=lifespan,
 )
 

@@ -23,3 +23,8 @@ uploads/
 htmlcov/
 .coverage
 tests/
+*.db-*
+qdrant_data*/
+.env
+.env.*
+!.env.example

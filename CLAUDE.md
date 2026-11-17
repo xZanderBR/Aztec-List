@@ -31,7 +31,7 @@ uv run python scripts/reindex_listings.py   # rebuild semantic-search vector ind
 uv run --with pip-audit pip-audit --strict   # dependency CVE audit — run after ANY dep change
 ```
 
-Python 3.13 required. `uv run` executes inside the project venv (`backend/.venv`).
+Python 3.14 required (matches CI and the production image). `uv run` executes inside the project venv (`backend/.venv`).
 
 ### Backend architecture
 
