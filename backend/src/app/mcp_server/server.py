@@ -1,7 +1,7 @@
 """
 MCP server exposing the marketplace as tools.
 
-A small Model Context Protocol server (FastMCP) so an MCP client such as Claude
+A small Model Context Protocol server (MCPServer) so an MCP client such as Claude
 Desktop can browse Aztec List listings. The tools reuse the existing service layer,
 so no business logic is duplicated here.
 """
@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Import the module (not the attribute) so SessionLocal lookups stay live with
 # any conftest test-time monkeypatching — same pattern as websocket_messages.
@@ -23,7 +23,7 @@ from app.services.listing import listing_service
 if TYPE_CHECKING:
     from app.models.listing import Listing
 
-mcp = FastMCP("aztec-list")
+mcp = MCPServer("aztec-list")
 
 
 def _summaries(listings: list[Listing]) -> list[dict]:
