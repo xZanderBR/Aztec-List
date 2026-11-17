@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 from qdrant_client import QdrantClient, models
 
 from app.core.settings import settings
-from app.services.embeddings import embedding_service
+from app.services.embeddings import embedding_service, listing_to_text
 
 if TYPE_CHECKING:
     from decimal import Decimal
@@ -49,6 +49,21 @@ class ListingFilter:
     max_price: Decimal | None = None
     seller_id: uuid.UUID | None = None
     active_only: bool = True
+
+
+def _point(listing: Listing, vector: list[float]) -> models.PointStruct:
+    """Qdrant point for a listing: its vector plus the payload search filters on."""
+    return models.PointStruct(
+        id=str(listing.id),
+        vector=vector,
+        payload={
+            "category": _enum_value(listing.category),
+            "condition": _enum_value(listing.condition),
+            "price": float(listing.price),
+            "seller_id": str(listing.seller_id),
+            "is_active": bool(listing.is_active),
+        },
+    )
 
 
 class VectorStoreService:
@@ -100,22 +115,18 @@ class VectorStoreService:
     def upsert_listing(self, listing: Listing) -> None:
         """Embed a listing and upsert its vector + filterable payload."""
         vector = self._embedder.embed_listing(listing.title, listing.description)
-        self.client.upsert(
-            collection_name=self._collection,
-            points=[
-                models.PointStruct(
-                    id=str(listing.id),
-                    vector=vector,
-                    payload={
-                        "category": _enum_value(listing.category),
-                        "condition": _enum_value(listing.condition),
-                        "price": float(listing.price),
-                        "seller_id": str(listing.seller_id),
-                        "is_active": bool(listing.is_active),
-                    },
-                )
-            ],
-        )
+        self.client.upsert(collection_name=self._collection, points=[_point(listing, vector)])
+
+    def upsert_listings(self, listings: list[Listing]) -> None:
+        """Embed many listings in one batched embedding call and upsert them together."""
+        if not listings:
+            return
+        texts = [listing_to_text(listing.title, listing.description) for listing in listings]
+        vectors = self._embedder.embed_documents(texts)
+        points = [
+            _point(listing, vector) for listing, vector in zip(listings, vectors, strict=True)
+        ]
+        self.client.upsert(collection_name=self._collection, points=points)
 
     def delete_listing(self, listing_id: uuid.UUID) -> None:
         """Remove a listing's vector from the collection."""

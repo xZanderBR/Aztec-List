@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_admin, require_not_banned
 from app.core.enums import MessageReportStatus
 from app.core.rate_limiter import limiter
+from app.demo.guards import protect_demo_personas
 from app.models.admin import AdminAction
 from app.models.user import User
 from app.schemas.admin import (
@@ -140,6 +141,7 @@ async def delete_admin_action(
 
 @admin_router.post(
     "/users/{user_id}/strike",
+    dependencies=[Depends(protect_demo_personas)],
     summary="Add a strike to a user",
     status_code=status.HTTP_201_CREATED,
 )
@@ -183,6 +185,7 @@ async def strike_user(
 
 @admin_router.post(
     "/users/{user_id}/ban",
+    dependencies=[Depends(protect_demo_personas)],
     summary="Ban a user",
     status_code=status.HTTP_201_CREATED,
     response_model=AdminActionPublic,
@@ -338,6 +341,7 @@ async def approve_flagged_listing(
 
 @admin_router.patch(
     "/users/{user_id}/verification",
+    dependencies=[Depends(protect_demo_personas)],
     summary="Manually verify or unverify a user",
     status_code=status.HTTP_200_OK,
 )

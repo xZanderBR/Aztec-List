@@ -13,8 +13,8 @@ This is a monorepo containing both backend and frontend:
 - **`backend/`** - FastAPI REST API (Python)
   - Has its own `.venv/` for Python dependencies
   - All backend commands run from `backend/` directory
-- **`frontend/`** - Web frontend (coming soon)
-  - Frontend commands will run from `frontend/` directory
+- **`frontend/`** - Next.js web frontend
+  - All frontend commands run from `frontend/` directory (with `bun`)
 - **`docs/`** - API documentation and design specs
 
 ## Backend Quickstart

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppConfig } from "@/hooks/useAppConfig";
+import { DemoPersonaPicker } from "@/components/demo/DemoPersonaPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +44,7 @@ function getPasswordStrengthInfo(strength: number): { label: string; color: stri
  * Provides user registration interface with username, email, and password.
  */
 export default function SignupPage() {
+  const { isDemo } = useAppConfig();
   const { signup, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -105,6 +108,24 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  if (isDemo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Signups are off in the demo</CardTitle>
+            <CardDescription className="text-sm">
+              This sandbox uses sample accounts instead, so there&apos;s no email to verify.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DemoPersonaPicker />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">

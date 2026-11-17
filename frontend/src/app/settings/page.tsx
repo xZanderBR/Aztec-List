@@ -41,6 +41,8 @@ import { showErrorToast } from "@/lib/errorHandling";
 import { createProfileQueryOptions } from "@/queryOptions/createProfileQueryOptions";
 import { getProfilePictureUrl } from "@/lib/profile-picture";
 import type { ContactInfo } from "@/types/user";
+import { useAppConfig } from "@/hooks/useAppConfig";
+import { DemoLockedNotice } from "@/components/demo/DemoLockedNotice";
 
 /**
  * Calculate password strength score (0-4).
@@ -77,6 +79,7 @@ interface ProfileUpdatePayload {
 
 function SettingsContent() {
   const { user, logout } = useAuth();
+  const { isDemo } = useAppConfig();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -898,309 +901,319 @@ function SettingsContent() {
 
           {/* Account Tab */}
           <TabsContent value="account">
-            <Card className="border bg-card">
-              <CardHeader>
-                <CardTitle className="text-lg text-foreground sm:text-xl">
-                  Account Details
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground sm:text-sm">
-                  Update your username
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAccountUpdate} className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="username" className="text-sm text-foreground sm:text-base">
-                      Username
-                    </Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setDraftUsername(e.target.value)}
-                      disabled={isAccountLoading}
-                      className="text-sm"
-                    />
-                  </div>
+            {isDemo && <DemoLockedNotice what="Username, email and account deletion" />}
+            <fieldset disabled={isDemo} className="contents">
+              <Card className="border bg-card">
+                <CardHeader>
+                  <CardTitle className="text-lg text-foreground sm:text-xl">
+                    Account Details
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground sm:text-sm">
+                    Update your username
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAccountUpdate} className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="username" className="text-sm text-foreground sm:text-base">
+                        Username
+                      </Label>
+                      <Input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setDraftUsername(e.target.value)}
+                        disabled={isAccountLoading}
+                        className="text-sm"
+                      />
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-sm text-foreground sm:text-base">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setDraftEmail(e.target.value)}
-                      disabled={isAccountLoading}
-                      className="text-sm"
-                    />
-                    {email !== user?.email && (
-                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/30 dark:bg-blue-900/20">
-                        <div className="flex items-start gap-2">
-                          <svg
-                            className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="text-sm text-foreground sm:text-base">
+                        Email
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setDraftEmail(e.target.value)}
+                        disabled={isAccountLoading}
+                        className="text-sm"
+                      />
+                      {email !== user?.email && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/30 dark:bg-blue-900/20">
+                          <div className="flex items-start gap-2">
+                            <svg
+                              className="h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <p className="text-xs text-blue-900 sm:text-sm dark:text-blue-200">
+                              Changing your email will require verification. You&apos;ll be logged
+                              out of unverified sessions.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Email Verification Status */}
+                    <div className="rounded-lg border p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          {user?.is_verified ? (
+                            <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
+                          ) : (
+                            <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600" />
+                          )}
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              {user?.is_verified ? "Email Verified" : "Email Not Verified"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {user?.is_verified
+                                ? "Your email address has been verified"
+                                : "Please verify your email address to access all features"}
+                            </p>
+                          </div>
+                        </div>
+                        {!user?.is_verified && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleResendVerification}
+                            disabled={isResendingVerification}
+                            className="flex-shrink-0"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          <p className="text-xs text-blue-900 sm:text-sm dark:text-blue-200">
-                            Changing your email will require verification. You&apos;ll be logged out
-                            of unverified sessions.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Email Verification Status */}
-                  <div className="rounded-lg border p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        {user?.is_verified ? (
-                          <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                        ) : (
-                          <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-purple-600" />
+                            {isResendingVerification ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              "Resend Email"
+                            )}
+                          </Button>
                         )}
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">
-                            {user?.is_verified ? "Email Verified" : "Email Not Verified"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {user?.is_verified
-                              ? "Your email address has been verified"
-                              : "Please verify your email address to access all features"}
-                          </p>
-                        </div>
                       </div>
-                      {!user?.is_verified && (
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <Button
+                        type="submit"
+                        className="flex-1 bg-purple-600 text-sm text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                        disabled={isAccountLoading || !hasAccountChanges}
+                      >
+                        {isAccountLoading ? "Updating..." : "Update Account"}
+                      </Button>
+                      {hasAccountChanges && (
                         <Button
                           type="button"
-                          size="sm"
+                          onClick={() => setShowAccountCancelDialog(true)}
+                          disabled={isAccountLoading}
                           variant="outline"
-                          onClick={handleResendVerification}
-                          disabled={isResendingVerification}
-                          className="flex-shrink-0"
+                          className="flex-1 border-red-900/50 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 sm:text-base"
                         >
-                          {isResendingVerification ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            "Resend Email"
-                          )}
+                          Cancel
                         </Button>
                       )}
                     </div>
-                  </div>
+                  </form>
 
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-purple-600 text-sm text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
-                      disabled={isAccountLoading || !hasAccountChanges}
-                    >
-                      {isAccountLoading ? "Updating..." : "Update Account"}
-                    </Button>
-                    {hasAccountChanges && (
+                  {/* Account Cancel Dialog */}
+                  <AlertDialog
+                    open={showAccountCancelDialog}
+                    onOpenChange={setShowAccountCancelDialog}
+                  >
+                    <AlertDialogContent className="border bg-card">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-foreground">
+                          Discard Changes?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground">
+                          Are you sure you want to discard your changes? This action cannot be
+                          undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleCancelAccountChanges}
+                          className="bg-red-600 text-white hover:bg-red-700"
+                        >
+                          Discard Changes
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardContent>
+              </Card>
+
+              <Separator className="my-4 sm:my-6" />
+
+              {/* Delete Account Section */}
+              <Card className="border border-red-900/50 bg-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base text-red-500 sm:text-lg">
+                    <AlertTriangle className="h-4 w-4" />
+                    Danger Zone
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground sm:text-sm">
+                    Permanently delete your account and all associated data
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
                       <Button
-                        type="button"
-                        onClick={() => setShowAccountCancelDialog(true)}
-                        disabled={isAccountLoading}
-                        variant="outline"
-                        className="flex-1 border-red-900/50 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 sm:text-base"
+                        variant="destructive"
+                        className="w-full text-xs transition-all hover:scale-[1.02] hover:shadow-lg sm:text-sm"
+                        disabled={isDeleting}
                       >
-                        Cancel
+                        <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        Delete Account
                       </Button>
-                    )}
-                  </div>
-                </form>
-
-                {/* Account Cancel Dialog */}
-                <AlertDialog
-                  open={showAccountCancelDialog}
-                  onOpenChange={setShowAccountCancelDialog}
-                >
-                  <AlertDialogContent className="border bg-card">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-foreground">
-                        Discard Changes?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-muted-foreground">
-                        Are you sure you want to discard your changes? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep Editing</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleCancelAccountChanges}
-                        className="bg-red-600 text-white hover:bg-red-700"
-                      >
-                        Discard Changes
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
-
-            <Separator className="my-4 sm:my-6" />
-
-            {/* Delete Account Section */}
-            <Card className="border border-red-900/50 bg-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base text-red-500 sm:text-lg">
-                  <AlertTriangle className="h-4 w-4" />
-                  Danger Zone
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground sm:text-sm">
-                  Permanently delete your account and all associated data
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="w-full text-xs transition-all hover:scale-[1.02] hover:shadow-lg sm:text-sm"
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      Delete Account
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="mx-4 max-w-md border bg-card">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-base text-foreground sm:text-lg">
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-xs text-muted-foreground">
-                        This action cannot be undone. This will permanently delete your account, all
-                        your listings, and remove all your data from our servers.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="text-xs sm:text-sm">Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteAccount}
-                        className="bg-red-600 text-xs text-white hover:bg-red-700 sm:text-sm"
-                      >
-                        {isDeleting ? "Deleting..." : "Delete Account"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="mx-4 max-w-md border bg-card">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-base text-foreground sm:text-lg">
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs text-muted-foreground">
+                          This action cannot be undone. This will permanently delete your account,
+                          all your listings, and remove all your data from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="text-xs sm:text-sm">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteAccount}
+                          className="bg-red-600 text-xs text-white hover:bg-red-700 sm:text-sm"
+                        >
+                          {isDeleting ? "Deleting..." : "Delete Account"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardContent>
+              </Card>
+            </fieldset>
           </TabsContent>
 
           {/* Security Tab */}
           <TabsContent value="security">
-            <Card className="border bg-card">
-              <CardHeader>
-                <CardTitle className="text-lg text-foreground sm:text-xl">
-                  Change Password
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground sm:text-sm">
-                  Update your password to keep your account secure
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordChange} className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="current-password"
-                      className="text-sm text-foreground sm:text-base"
-                    >
-                      Current Password
-                    </Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      disabled={isPasswordLoading}
-                      className="text-sm"
-                      placeholder="Enter current password"
-                    />
-                  </div>
+            {isDemo && <DemoLockedNotice what="Password changes" />}
+            <fieldset disabled={isDemo} className="contents">
+              <Card className="border bg-card">
+                <CardHeader>
+                  <CardTitle className="text-lg text-foreground sm:text-xl">
+                    Change Password
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground sm:text-sm">
+                    Update your password to keep your account secure
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePasswordChange} className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="current-password"
+                        className="text-sm text-foreground sm:text-base"
+                      >
+                        Current Password
+                      </Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        disabled={isPasswordLoading}
+                        className="text-sm"
+                        placeholder="Enter current password"
+                      />
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-password" className="text-sm text-foreground sm:text-base">
-                      New Password
-                    </Label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      disabled={isPasswordLoading}
-                      className="text-sm"
-                      placeholder="Enter new password"
-                    />
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="new-password"
+                        className="text-sm text-foreground sm:text-base"
+                      >
+                        New Password
+                      </Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={isPasswordLoading}
+                        className="text-sm"
+                        placeholder="Enter new password"
+                      />
 
-                    {/* Password strength indicator */}
-                    {newPassword.length > 0 && (
-                      <div className="space-y-1">
-                        <div className="flex gap-1">
-                          {[...Array(4)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`h-1 flex-1 rounded-full transition-colors ${
-                                i < passwordStrength ? strengthInfo.color : "bg-muted"
-                              }`}
-                            />
-                          ))}
+                      {/* Password strength indicator */}
+                      {newPassword.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex gap-1">
+                            {[...Array(4)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-1 flex-1 rounded-full transition-colors ${
+                                  i < passwordStrength ? strengthInfo.color : "bg-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground sm:text-sm">
+                            Password strength: {strengthInfo.label}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground sm:text-sm">
-                          Password strength: {strengthInfo.label}
-                        </p>
-                      </div>
-                    )}
+                      )}
 
-                    <p className="text-xs text-muted-foreground sm:text-sm">
-                      Must be at least 8 characters
-                    </p>
-                  </div>
+                      <p className="text-xs text-muted-foreground sm:text-sm">
+                        Must be at least 8 characters
+                      </p>
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="confirm-password"
-                      className="text-sm text-foreground sm:text-base"
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="confirm-password"
+                        className="text-sm text-foreground sm:text-base"
+                      >
+                        Confirm New Password
+                      </Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={isPasswordLoading}
+                        className="text-sm"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="mt-4 w-full bg-purple-600 text-sm text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                      disabled={
+                        isPasswordLoading || !currentPassword || !newPassword || !confirmPassword
+                      }
                     >
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      disabled={isPasswordLoading}
-                      className="text-sm"
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="mt-4 w-full bg-purple-600 text-sm text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
-                    disabled={
-                      isPasswordLoading || !currentPassword || !newPassword || !confirmPassword
-                    }
-                  >
-                    {isPasswordLoading ? "Changing Password..." : "Change Password"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                      {isPasswordLoading ? "Changing Password..." : "Change Password"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </fieldset>
           </TabsContent>
         </Tabs>
       </div>

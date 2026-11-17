@@ -1,0 +1,133 @@
+{
+  "personas": [
+    {
+      "key": "maya",
+      "user": "maya",
+      "role": "seller",
+      "blurb": "Computer Engineering junior selling her old desk setup and dorm gear. Has buyers messaging her."
+    },
+    {
+      "key": "jordan",
+      "user": "jordan",
+      "role": "buyer",
+      "blurb": "Freshman furnishing a dorm on a budget, with a few conversations going (including a sketchy one)."
+    },
+    {
+      "key": "admin",
+      "user": "alex",
+      "role": "moderator",
+      "blurb": "Campus moderator. Reviews flagged listings, message reports and support tickets."
+    }
+  ],
+  "users": [
+    {"key": "maya", "username": "maya_r", "name": "Maya Rodriguez", "joined_days_ago": 210},
+    {"key": "jordan", "username": "jordan_l", "name": "Jordan Lee", "joined_days_ago": 40},
+    {"key": "alex", "username": "alex_mod", "name": "Alex Kim", "joined_days_ago": 400, "admin": true},
+    {"key": "priya", "username": "priya_s", "name": "Priya Shah", "joined_days_ago": 320},
+    {"key": "marcus", "username": "marcus_t", "name": "Marcus Thompson", "joined_days_ago": 150},
+    {"key": "sofia", "username": "sofia_g", "name": "Sofia Garcia", "joined_days_ago": 95},
+    {"key": "ethan", "username": "ethan_w", "name": "Ethan Wong", "joined_days_ago": 500},
+    {"key": "chloe", "username": "chloe_n", "name": "Chloe Nguyen", "joined_days_ago": 60},
+    {"key": "deals", "username": "deals4u_sd", "name": "Deals 4 U", "joined_days_ago": 2}
+  ],
+  "listings": [
+    {"key": "maya-desk", "seller": "maya", "title": "IKEA Micke desk (white)", "price": 45, "category": "furniture", "condition": "good", "days_ago": 3, "images": 2,
+     "description": "Compact white desk with a drawer and a cable outlet. Fits the Chapultepec and Granada dorm rooms perfectly. Light scuffs on the top. Pickup near the Trolley stop."},
+    {"key": "maya-monitor", "seller": "maya", "title": "27\" Dell gaming monitor (1440p, 165Hz)", "price": 140, "category": "electronics", "condition": "like_new", "days_ago": 5, "images": 2,
+     "description": "Dell S2721DGF, barely used since I moved to a laptop-only setup. Comes with the original stand and a DisplayPort cable."},
+    {"key": "maya-keyboard", "seller": "maya", "title": "Mechanical keyboard, brown switches", "price": 35, "category": "electronics", "condition": "good", "days_ago": 6, "images": 1,
+     "description": "Keychron K2 with Gateron browns. Bluetooth and USB-C. Quiet enough for late-night coding without waking your roommate (mostly)."},
+    {"key": "maya-calc", "seller": "maya", "title": "TI-84 Plus CE graphing calculator", "price": 60, "category": "electronics", "condition": "good", "days_ago": 8, "images": 1,
+     "description": "Got me through Calc 1-3 and Linear Algebra. Rechargeable over USB, case included."},
+    {"key": "maya-circuits", "seller": "maya", "title": "Fundamentals of Electric Circuits, 7th edition", "price": 40, "category": "textbooks", "condition": "good", "days_ago": 12, "images": 1,
+     "description": "Alexander and Sadiku, required for the intro circuits course. Highlighting in chapters 1-6, otherwise clean."},
+    {"key": "maya-lamp", "seller": "maya", "title": "LED desk lamp with USB charging port", "price": 15, "category": "dorm", "condition": "like_new", "days_ago": 12, "images": 1,
+     "description": "Three brightness levels plus warm and cool light. Clamps onto the edge of a desk."},
+    {"key": "maya-chair", "seller": "maya", "title": "Ergonomic mesh office chair", "price": 70, "category": "furniture", "condition": "good", "days_ago": 15, "images": 2,
+     "description": "Adjustable lumbar support and armrests. Saved my back during finals week. Pickup only, it's bulky."},
+    {"key": "maya-pi", "seller": "maya", "title": "Raspberry Pi 4 (4GB) starter kit", "price": 55, "category": "electronics", "condition": "like_new", "days_ago": 20, "images": 1,
+     "description": "Includes a case, fan, power supply and a 32GB microSD card with Raspberry Pi OS. Used for one class project."},
+    {"key": "maya-plant", "seller": "maya", "title": "Pothos plant in a ceramic planter", "price": 12, "category": "other", "condition": "good", "days_ago": 25, "images": 1,
+     "description": "Healthy, very forgiving houseplant. Survived a whole semester of me forgetting to water it."},
+    {"key": "priya-ochem", "seller": "priya", "title": "Organic Chemistry (Klein, 4th edition)", "price": 55, "category": "textbooks", "condition": "good", "days_ago": 2, "images": 1,
+     "description": "For the organic chemistry sequence. Light pencil notes in the margins, solutions manual included."},
+    {"key": "priya-bio", "seller": "priya", "title": "Campbell Biology, 12th edition", "price": 35, "category": "textbooks", "condition": "fair", "days_ago": 9, "images": 1,
+     "description": "Cover is worn but every page is intact. Used for the intro biology sequence."},
+    {"key": "priya-fridge", "seller": "priya", "title": "Mini fridge with freezer box (3.1 cu ft)", "price": 80, "category": "appliances", "condition": "good", "days_ago": 4, "images": 2,
+     "description": "Keeps drinks cold and fits under a lofted bed. Cleaned and defrosted, ready to go."},
+    {"key": "priya-microwave", "seller": "priya", "title": "Compact microwave, 700W", "price": 30, "category": "appliances", "condition": "good", "days_ago": 11, "images": 1,
+     "description": "Works great for ramen and leftovers. Check your residence hall's appliance rules first."},
+    {"key": "priya-labcoat", "seller": "priya", "title": "Lab coat and safety goggles (size M)", "price": 18, "category": "clothing", "condition": "like_new", "days_ago": 30, "images": 1,
+     "description": "Required for chem labs. Washed, no stains."},
+    {"key": "marcus-bike", "seller": "marcus", "title": "Road bike, 54cm aluminum frame", "price": 260, "category": "bicycles", "condition": "good", "days_ago": 1, "images": 2,
+     "description": "Shimano Claris groupset, new tires and brake pads last month. Great for commuting to campus."},
+    {"key": "marcus-lock", "seller": "marcus", "title": "Kryptonite U-lock with cable", "price": 20, "category": "bicycles", "condition": "like_new", "days_ago": 1, "images": 1,
+     "description": "U-lock plus a 4ft cable for the front wheel. Two keys included."},
+    {"key": "marcus-surf", "seller": "marcus", "title": "7'0\" soft-top surfboard", "price": 90, "category": "sports_equipment", "condition": "fair", "days_ago": 14, "images": 2,
+     "description": "Foam funboard, perfect for learning at Pacific Beach. A few dings, no leaks. Leash included."},
+    {"key": "marcus-skate", "seller": "marcus", "title": "Complete skateboard", "price": 40, "category": "sports_equipment", "condition": "good", "days_ago": 18, "images": 1,
+     "description": "8 inch deck, smooth bearings, fresh grip tape. Fastest way across campus between classes."},
+    {"key": "marcus-helmet", "seller": "marcus", "title": "Bike helmet (size M), new with tags", "price": 25, "category": "bicycles", "condition": "new", "days_ago": 22, "images": 1,
+     "description": "Bought the wrong size and never wore it."},
+    {"key": "sofia-switch", "seller": "sofia", "title": "Nintendo Switch OLED with two games", "price": 240, "category": "video_games", "condition": "like_new", "days_ago": 2, "images": 2,
+     "description": "White OLED model with dock and two Joy-Cons, plus Mario Kart 8 and Animal Crossing. Screen protector since day one."},
+    {"key": "sofia-gta", "seller": "sofia", "title": "Grand Theft Auto V (PS5)", "price": 15, "category": "video_games", "condition": "good", "days_ago": 7, "images": 1,
+     "description": "Disc is in great condition and works perfectly."},
+    {"key": "sofia-headphones", "seller": "sofia", "title": "Sony WH-1000XM4 noise-cancelling headphones", "price": 120, "category": "electronics", "condition": "good", "days_ago": 10, "images": 1,
+     "description": "Best purchase I made for studying in the library. Includes the case and cable, 30-hour battery."},
+    {"key": "sofia-guitar", "seller": "sofia", "title": "Yamaha FG800 acoustic guitar", "price": 110, "category": "musical_instruments", "condition": "good", "days_ago": 16, "images": 2,
+     "description": "Comes with a gig bag, spare strings and a capo. A great beginner guitar."},
+    {"key": "ethan-tickets", "seller": "ethan", "title": "Two student tickets: Aztecs football vs. Fresno State", "price": 30, "category": "tickets", "condition": "new", "days_ago": 1, "images": 1,
+     "description": "Two student-section seats for Saturday's home game. Price is for both, transferable through the ticket app."},
+    {"key": "ethan-jacket", "seller": "ethan", "title": "North Face rain jacket (men's L)", "price": 45, "category": "clothing", "condition": "good", "days_ago": 13, "images": 1,
+     "description": "Waterproof shell that packs into its own pocket. Rarely needed in San Diego, which is why it's for sale."},
+    {"key": "ethan-sneakers", "seller": "ethan", "title": "Nike Air Force 1 (men's 10)", "price": 50, "category": "shoes", "condition": "good", "days_ago": 19, "images": 1,
+     "description": "Worn a handful of times and cleaned. Original box included."},
+    {"key": "ethan-tutoring", "seller": "ethan", "title": "Python and Java tutoring for intro CS", "price": 25, "category": "services", "condition": "new", "days_ago": 6, "images": 1,
+     "description": "Senior CS student, $25 an hour. Help with labs, debugging and exam prep. Meet at the library or over Zoom."},
+    {"key": "chloe-bedding", "seller": "chloe", "title": "Twin XL bedding set", "price": 30, "category": "dorm", "condition": "like_new", "days_ago": 3, "images": 1,
+     "description": "Comforter, fitted sheet, flat sheet and two pillowcases. Washed, from a smoke-free room."},
+    {"key": "chloe-art", "seller": "chloe", "title": "Watercolor set and two sketchbooks", "price": 25, "category": "art", "condition": "like_new", "days_ago": 9, "images": 1,
+     "description": "Travel watercolor set with brushes and two unused sketchbooks, bought for an intro art class."},
+    {"key": "chloe-mirror", "seller": "chloe", "title": "Over-the-door full-length mirror", "price": 20, "category": "dorm", "condition": "good", "days_ago": 21, "images": 1,
+     "description": "No cracks, hooks included. Makes a small room feel bigger."},
+    {"key": "jordan-shelf", "seller": "jordan", "title": "Small three-shelf bookcase", "price": 15, "category": "furniture", "condition": "fair", "days_ago": 4, "images": 1,
+     "description": "Some wear on the corners. Making room for a desk, so it needs to go this week."},
+    {"key": "jordan-catan", "seller": "jordan", "title": "Catan board game, complete", "price": 25, "category": "other", "condition": "like_new", "days_ago": 8, "images": 1,
+     "description": "Played twice, every piece accounted for. Great for floor game nights."},
+    {"key": "deals-phone", "seller": "deals", "title": "iPhone 16 Pro Max, brand new, $150", "price": 150, "category": "electronics", "condition": "new", "days_ago": 1, "images": 1,
+     "description": "Brand new, sealed, no box. Cash app or gift cards only. Can't meet in person, I ship same day.",
+     "flag_reason": "Price far below market and payment requested in gift cards (likely scam)."}
+  ],
+  "conversations": [
+    {"key": "jordan-maya", "users": ["jordan", "maya"], "messages": [
+      {"from": "jordan", "minutes_ago": 300, "text": "Hi! Is the IKEA desk still available?"},
+      {"from": "maya", "minutes_ago": 290, "text": "Yes it is! Are you on campus this week?"},
+      {"from": "jordan", "minutes_ago": 280, "text": "I'm in Chapultepec. Could I pick it up Thursday after 4?"},
+      {"from": "maya", "minutes_ago": 275, "text": "Thursday at 4:30 works. I can meet you by the Trolley stop."}
+    ]},
+    {"key": "jordan-priya", "users": ["jordan", "priya"], "messages": [
+      {"from": "jordan", "minutes_ago": 1500, "text": "Would you take $65 for the mini fridge?"},
+      {"from": "priya", "minutes_ago": 1440, "text": "I could do $70 if you can pick it up this weekend."}
+    ]},
+    {"key": "marcus-maya", "users": ["marcus", "maya"], "messages": [
+      {"from": "marcus", "minutes_ago": 2900, "text": "Does the monitor come with the stand?"},
+      {"from": "maya", "minutes_ago": 2880, "text": "Yep, the original stand and a DisplayPort cable."}
+    ]},
+    {"key": "jordan-deals", "users": ["jordan", "deals"], "messages": [
+      {"key": "scam-1", "from": "deals", "minutes_ago": 120, "text": "hey saw u looking at phones. pay with gift card and i ship today, super cheap"},
+      {"from": "jordan", "minutes_ago": 110, "text": "I'd rather meet on campus and pay in person."},
+      {"from": "deals", "minutes_ago": 100, "text": "no meet. send the gift card code now or someone else gets it"}
+    ]}
+  ],
+  "message_reports": [
+    {"reporter": "jordan", "message": "scam-1", "category": "scam", "minutes_ago": 95,
+     "reason": "Asking for gift card payment and refusing to meet in person."}
+  ],
+  "support_tickets": [
+    {"user": "jordan", "subject": "Photo upload stuck on Safari", "status": "open", "days_ago": 1,
+     "message": "When I add photos to a listing from my iPhone, the progress bar stops at 90%."},
+    {"user": "sofia", "subject": "How do I mark a listing as sold?", "status": "resolved", "days_ago": 6,
+     "message": "I sold my calculator. Should I delete the listing or is there a sold button?"}
+  ]
+}

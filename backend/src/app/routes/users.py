@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_not_banned
 from app.core.rate_limiter import limiter
+from app.demo.guards import forbid_in_demo
 from app.models.profile import Profile
 from app.models.user import User
 from app.schemas.listing import (
@@ -178,6 +179,7 @@ async def get_user_listings(
 
 @user_router.patch(
     "/me",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Update current user",
     status_code=status.HTTP_200_OK,
     response_model=UserPublicWithEmailStatus,
@@ -216,6 +218,7 @@ async def update_current_user(
 
 @user_router.patch(
     "/me/password",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Change current user password",
     status_code=status.HTTP_200_OK,
 )
@@ -254,6 +257,7 @@ async def change_password(
 
 @user_router.delete(
     "/me",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Delete current user",
     status_code=status.HTTP_204_NO_CONTENT,
     response_model=None,

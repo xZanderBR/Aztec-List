@@ -28,6 +28,12 @@ from app.services.ai_listing_assist import ai_listing_assist_service
 
 logger = logging.getLogger(__name__)
 
+
+def ai_rate_limit() -> str:
+    """Per-IP limit for LLM-backed routes; tighter on the public demo to protect its budget."""
+    return "5/minute;30/day" if settings.demo.enabled else "10/minute;100/hour"
+
+
 ai_router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 
 
@@ -40,7 +46,7 @@ def _ensure_ai_enabled() -> None:
 
 
 @ai_router.post("/chat", summary="Stream a shopping-assistant reply (SSE)")
-@limiter.limit("10/minute;100/hour")
+@limiter.limit(ai_rate_limit)
 async def chat(
     request: Request,  # noqa: ARG001 - required by slowapi for rate limiting
     body: AIChatRequest,
@@ -61,7 +67,7 @@ async def chat(
     "/generate-description",
     summary="Generate a listing description (AI)",
 )
-@limiter.limit("10/minute;100/hour")
+@limiter.limit(ai_rate_limit)
 async def generate_description(
     request: Request,  # noqa: ARG001 - required by slowapi for rate limiting
     body: GenerateDescriptionRequest,

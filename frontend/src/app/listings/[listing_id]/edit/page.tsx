@@ -34,6 +34,7 @@ import { showErrorToast } from "@/lib/errorHandling";
 import { ProtectedRoute } from "@/components/custom/ProtectedRoute";
 import { Loader2, ChevronLeft, Check, Sparkles } from "lucide-react";
 import type { ImagePublic, ListingPublic } from "@/types/listing/listing";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 export default function EditListingPage() {
   return (
@@ -266,6 +267,7 @@ function EditForm({
     },
   });
 
+  const { ai } = useAppConfig();
   const generateDescriptionMutation = useMutation({
     mutationFn: () =>
       generateListingDescription({
@@ -406,26 +408,33 @@ function EditForm({
               <Label htmlFor="description" className="text-foreground">
                 Description <span className="text-red-500">*</span>
               </Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => generateDescriptionMutation.mutate()}
-                disabled={
-                  !title.trim() || !category || !condition || generateDescriptionMutation.isPending
-                }
-                title={
-                  !category || !condition ? "Add a title, category, and condition first" : undefined
-                }
-                className="h-7 gap-1 px-2 text-xs text-purple-600 hover:text-purple-700 dark:text-purple-300"
-              >
-                {generateDescriptionMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-3.5 w-3.5" />
-                )}
-                Generate
-              </Button>
+              {ai.generate_description && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => generateDescriptionMutation.mutate()}
+                  disabled={
+                    !title.trim() ||
+                    !category ||
+                    !condition ||
+                    generateDescriptionMutation.isPending
+                  }
+                  title={
+                    !category || !condition
+                      ? "Add a title, category, and condition first"
+                      : undefined
+                  }
+                  className="h-7 gap-1 px-2 text-xs text-purple-600 hover:text-purple-700 dark:text-purple-300"
+                >
+                  {generateDescriptionMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Generate
+                </Button>
+              )}
             </div>
             <Textarea
               id="description"

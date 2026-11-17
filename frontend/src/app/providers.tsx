@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { QUERY_RETRY_COUNT } from "@/lib/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AssistantSheet } from "@/components/ai/AssistantSheet";
+import { DemoBanner } from "@/components/demo/DemoBanner";
 import { isBannedError, handleBannedUser } from "@/lib/errorHandling";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -35,6 +36,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
         <AuthProvider>
+          <DemoBanner />
           {children}
           <AssistantSheet />
         </AuthProvider>

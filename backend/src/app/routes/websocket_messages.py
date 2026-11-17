@@ -158,6 +158,23 @@ async def broadcast_message_to_conversation(conversation_id: uuid.UUID, message_
             active_connections[conversation_id].remove(dead_conn)
 
 
+# 1012 "Service Restart": tells clients the server is resetting and they may reconnect.
+_WS_SERVICE_RESTART = 1012
+
+
+async def close_all_connections(reason: str = "Server restarting") -> None:
+    """
+    Close every live WebSocket (used before a demo data reset).
+
+    Each connection's receive loop handles the disconnect and releases its own slot and
+    lock, so this only needs to send the close frames.
+    """
+    sockets = [ws for connections in list(active_connections.values()) for ws in list(connections)]
+    for ws in sockets:
+        with suppress(Exception):  # already closing or closed
+            await ws.close(code=_WS_SERVICE_RESTART, reason=reason)
+
+
 async def add_websocket_connection(conversation_id: uuid.UUID, websocket: WebSocket) -> None:
     """
     Add a WebSocket connection to the active connections for a conversation.

@@ -70,6 +70,31 @@ Production refuses to boot when any of these is true (`app/core/settings.py`):
 Rate limits key on Fly's `Fly-Client-IP` header (`app/core/rate_limiter.py`), so each
 visitor gets their own bucket behind the proxy.
 
+## Demo mode
+
+`DEMO__ENABLED=true` (set in `fly.toml`) turns the deployment into a sandbox:
+
+- **Seed data.** On first boot the API seeds `backend/src/app/demo/seed_data.json`:
+  - three login personas (a seller, a buyer, a moderator)
+  - background students
+  - 33 listings
+  - conversations, a pending scam report, a flagged listing and support tickets
+
+  Listing photos are generated placeholders. To use real photos, drop files into
+  `backend/src/app/demo/photos/` (see the README there).
+- **Login.** Visitors log in with `POST /api/v1/auth/demo/{persona}`. There is no
+  password, signup or email. `GET /api/v1/config` lists the personas and the next reset
+  time for the frontend.
+- **Resets.** Everything resets to the seed every `DEMO__RESET_INTERVAL_HOURS` (default
+  6, aligned to UTC). Seeded rows keep fixed IDs, so persona sessions and listing URLs
+  survive resets.
+- **Blocked actions.** Signup, email, username and password changes, and account or
+  profile deletion return 403 "Disabled in the demo". The moderator can strike or ban
+  background students but not the login personas.
+- **AI limits.** AI routes are limited to 5 requests per minute and 30 per day per IP.
+
+Never enable demo mode on a deployment with real users: every reset deletes all rows.
+
 ## One-time setup
 
 ### 1. Accounts and keys (you)
@@ -183,11 +208,19 @@ fly logs
 fly status
 ```
 
-Rebuild the vector index:
+Reset the demo to its seed now. This also rebuilds the vector index. It needs the
+`DEMO__RESET_TOKEN` secret:
 
 ```bash
-fly ssh console -C "python scripts/reindex_listings.py"
+fly secrets set DEMO__RESET_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
+
+```bash
+fly ssh console -C "python scripts/reset_demo.py"
+```
+
+Don't run `scripts/reindex_listings.py` on the live machine. The embedded Qdrant index
+is single-process, and the running server holds its lock.
 
 Shell into the machine:
 

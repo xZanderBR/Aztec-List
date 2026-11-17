@@ -20,6 +20,7 @@ from app.core.middleware import (
 from app.core.rate_limiter import limiter
 from app.core.sentry import init_sentry
 from app.core.settings import settings
+from app.demo import scheduler as demo_scheduler
 from app.routes.health import health_router
 from app.routes.websocket_messages import websocket_router
 from app.services.vector_store import vector_store
@@ -56,7 +57,13 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         except Exception:  # app must still start if Qdrant is unavailable
             logger.exception("Failed to initialize vector store collection")
 
+    # Sandbox demo: seed on first boot, then reset to the seed on a schedule
+    demo_task = await demo_scheduler.start() if settings.demo.enabled else None
+
     yield
+
+    if demo_task is not None:
+        await demo_scheduler.stop(demo_task)
 
     # Shutdown: release the vector store client (frees the embedded Qdrant lock)
     if settings.ai.enabled:

@@ -44,12 +44,18 @@ class EmbeddingError(RuntimeError):
 class Embedder(Protocol):
     """What the vector store and search code need from an embedding backend."""
 
-    def embed_query(self, text: str) -> list[float]: ...
-    def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
-    def embed_listing(self, title: str, description: str) -> list[float]: ...
+    def embed_query(self, text: str) -> list[float]:
+        """Embed a search query."""
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        """Embed a batch of documents (listing text)."""
+
+    def embed_listing(self, title: str, description: str) -> list[float]:
+        """Embed a single listing's combined title + description."""
 
     @property
-    def dimension(self) -> int: ...
+    def dimension(self) -> int:
+        """Vector dimension the backend produces."""
 
 
 def listing_to_text(title: str, description: str) -> str:
