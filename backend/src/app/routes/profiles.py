@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_not_banned
 from app.core.rate_limiter import limiter
+from app.demo.guards import forbid_in_demo
 from app.models.profile import Profile
 from app.models.user import User
 from app.schemas.profile import (
@@ -182,6 +183,7 @@ async def update_profile_picture(
 
 @profile_router.delete(
     "",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Delete a user profile",
     status_code=status.HTTP_204_NO_CONTENT,
     response_model=None,

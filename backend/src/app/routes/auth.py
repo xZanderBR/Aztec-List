@@ -11,6 +11,7 @@ from app.core.email import email_service
 from app.core.rate_limiter import limiter
 from app.core.security import generate_verification_token, get_verification_token_expiry
 from app.core.settings import Settings, get_settings
+from app.demo.guards import forbid_in_demo
 from app.repository.user import UserRepository
 from app.schemas.user import Token, UserCreate, UserPrivate, UserPublicWithEmailStatus
 from app.services.user import user_service
@@ -23,6 +24,7 @@ auth_router = APIRouter(
 
 @auth_router.post(
     "/signup",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Register a new user",
     status_code=status.HTTP_201_CREATED,
     response_model=UserPublicWithEmailStatus,
@@ -147,6 +149,7 @@ async def verify_email(
 
 @auth_router.post(
     "/resend-verification",
+    dependencies=[Depends(forbid_in_demo)],
     summary="Resend verification email",
     status_code=status.HTTP_200_OK,
 )

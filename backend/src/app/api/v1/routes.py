@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.routes.admin import admin_router
 from app.routes.ai import ai_router
 from app.routes.auth import auth_router
+from app.routes.demo import demo_router
 from app.routes.listing_images import listing_images_router
 from app.routes.listings import listing_router
 from app.routes.message_report import message_report_router
@@ -16,6 +17,7 @@ from app.routes.users import user_router
 api_router = APIRouter(prefix="/api/v1")
 
 api_router.include_router(auth_router)
+api_router.include_router(demo_router)
 api_router.include_router(profile_router)  # Register profile routes BEFORE user routes
 api_router.include_router(user_router)
 api_router.include_router(listing_router)

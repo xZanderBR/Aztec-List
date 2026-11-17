@@ -510,6 +510,32 @@ class LLMSettings(BaseModel):
     )
 
 
+class DemoSettings(BaseModel):
+    """
+    Public sandbox demo mode (portfolio deployments).
+
+    When enabled: visitors log in as seeded personas via ``POST /auth/demo/{persona}``
+    (no signup, no email), account-destroying actions return 403, and all data resets to
+    the seed on a fixed schedule. Never enable this on a real deployment with real users:
+    every reset deletes all rows.
+    """
+
+    enabled: bool = Field(default=False, description="Turn on sandbox demo mode")
+    reset_interval_hours: float = Field(
+        default=6.0,
+        gt=0,
+        le=168,
+        description="Reset to the seed data every N hours (aligned to UTC boundaries)",
+    )
+    reset_token: str = Field(
+        default="",
+        description=(
+            "Shared secret for POST /demo/reset (manual reset, e.g. scripts/reset_demo.py). "
+            "Empty disables the endpoint."
+        ),
+    )
+
+
 class Settings(BaseSettings):
     """
     Application settings loaded from environment variables.
@@ -544,6 +570,7 @@ class Settings(BaseSettings):
     vector: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     sentry: SentrySettings = Field(default_factory=SentrySettings)
+    demo: DemoSettings = Field(default_factory=DemoSettings)
 
     @model_validator(mode="after")
     def _refuse_unsafe_production(self) -> "Settings":
