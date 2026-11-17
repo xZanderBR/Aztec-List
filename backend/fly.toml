@@ -17,6 +17,9 @@
 
 app = "azteclist-api"
 primary_region = "iad"
+# Headroom for brief spikes (argon2 hashing uses 64 MiB per login) without OOM kills.
+# Must stay above the first [table]: in TOML, keys after a header belong to that table.
+swap_size_mb = 512
 
 [build]
   dockerfile = "Dockerfile"
@@ -78,6 +81,3 @@ primary_region = "iad"
 [[vm]]
   size = "shared-cpu-1x"
   memory = "512mb"
-
-# Headroom for brief spikes (argon2 hashing uses 64 MiB per login) without OOM kills.
-swap_size_mb = 512
