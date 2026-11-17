@@ -81,18 +81,17 @@ class DatabaseSettings(BaseModel):
 
     @field_validator("database_url")
     @classmethod
-    def _pin_postgres_driver(cls, url: str) -> str:
+    def _use_psycopg_driver(cls, url: str) -> str:
         """
-        Point plain Postgres URLs at the installed psycopg2 driver.
+        Point plain Postgres URLs at the installed psycopg (v3) driver.
 
-        SQLAlchemy 2.1 made psycopg (v3) the default driver for ``postgresql://`` URLs, but
-        this project ships ``psycopg2-binary``. Hosts (Neon, Heroku, docker-compose) hand
-        out plain ``postgresql://`` or ``postgres://`` URLs, so map both to
-        ``postgresql+psycopg2://``. URLs that already name a driver are left alone.
+        Hosts hand out ``postgres://`` (Heroku style, which SQLAlchemy rejects) or plain
+        ``postgresql://`` URLs; map both to ``postgresql+psycopg://`` so the driver is
+        explicit. URLs that already name a driver are left alone.
         """
         for prefix in ("postgresql://", "postgres://"):
             if url.startswith(prefix):
-                return "postgresql+psycopg2://" + url.removeprefix(prefix)
+                return "postgresql+psycopg://" + url.removeprefix(prefix)
         return url
 
     echo: bool = Field(

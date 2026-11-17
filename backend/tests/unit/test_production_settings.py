@@ -88,19 +88,18 @@ class TestDatabaseUrl:
     @pytest.mark.parametrize(
         ("url", "expected"),
         [
-            ("postgresql://u:p@db:5432/app", "postgresql+psycopg2://u:p@db:5432/app"),
-            ("postgres://u:p@db:5432/app", "postgresql+psycopg2://u:p@db:5432/app"),
-            ("postgresql+psycopg2://u:p@db/app", "postgresql+psycopg2://u:p@db/app"),
+            ("postgresql://u:p@db:5432/app", "postgresql+psycopg://u:p@db:5432/app"),
+            ("postgres://u:p@db:5432/app", "postgresql+psycopg://u:p@db:5432/app"),
             ("postgresql+psycopg://u:p@db/app", "postgresql+psycopg://u:p@db/app"),
             ("sqlite:////data/aztec_list.db", "sqlite:////data/aztec_list.db"),
         ],
     )
-    def test_plain_postgres_urls_use_psycopg2(self, url: str, expected: str) -> None:
+    def test_plain_postgres_urls_use_psycopg(self, url: str, expected: str) -> None:
         assert DatabaseSettings(database_url=url).database_url == expected
 
     def test_engine_builds_for_plain_postgres_url(self) -> None:
         from sqlalchemy import create_engine
 
-        url = DatabaseSettings(database_url="postgresql://u:p@localhost:5432/app").database_url
+        url = DatabaseSettings(database_url="postgres://u:p@localhost:5432/app").database_url
         engine = create_engine(url)  # no connection is made; only the driver import is checked
-        assert engine.dialect.driver == "psycopg2"
+        assert engine.dialect.driver == "psycopg"
