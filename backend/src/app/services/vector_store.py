@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from app.core.enums import Category, Condition
     from app.models.listing import Listing
-    from app.services.embeddings import EmbeddingService
+    from app.services.embeddings import Embedder
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class VectorStoreService:
         *,
         location: str | None = None,
         collection: str | None = None,
-        embedder: EmbeddingService | None = None,
+        embedder: Embedder | None = None,
     ) -> None:
         # `location` overrides settings (used by tests, e.g. ":memory:").
         self._location = location

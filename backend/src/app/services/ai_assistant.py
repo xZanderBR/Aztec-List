@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from langchain_core.messages import AIMessage, HumanMessage
 
 from app.core.enums import AIMessageRole
-from app.core.llm import get_chat_model
+from app.core.llm import friendly_llm_error, get_chat_model
 from app.repository.ai_conversation import AIConversationRepository
 from app.services import rag
 
@@ -98,9 +98,10 @@ class AIAssistantService:
                         )
                         answer_parts.append(text)
                         yield _sse({"type": "token", "content": text})
-        except Exception:
+        except Exception as exc:
             logger.exception("AI assistant stream failed")
-            yield _sse({"type": "error", "message": "The assistant failed to respond."})
+            message = friendly_llm_error(exc, "The assistant failed to respond.")
+            yield _sse({"type": "error", "message": message})
             return
 
         # Cite only the listings the assistant actually recommended (the LLM is a better

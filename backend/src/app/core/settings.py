@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -362,11 +363,32 @@ class AISettings(BaseModel):
 
 
 class EmbeddingSettings(BaseModel):
-    """Local text-embedding model configuration (fastembed, no API key)."""
+    """
+    Text-embedding configuration.
 
+    ``fastembed`` (default) runs the model locally and offline but needs ~1 GB of RAM
+    with onnxruntime. ``cloudflare`` calls the same BGE model hosted on Cloudflare
+    Workers AI, so a small production machine needs no local model at all.
+    """
+
+    provider: Literal["fastembed", "cloudflare"] = Field(
+        default="fastembed",
+        description="Embedding backend: 'fastembed' (local) or 'cloudflare' (Workers AI)",
+    )
     model: str = Field(
         default="BAAI/bge-small-en-v1.5",
         description="fastembed model used to embed listing text; runs locally and offline",
+    )
+    cloudflare_model: str = Field(
+        default="@cf/baai/bge-small-en-v1.5",
+        description="Workers AI model id; keep it the same model family as `model`",
+    )
+    cloudflare_account_id: str = Field(default="", description="Cloudflare account id")
+    cloudflare_api_token: str = Field(
+        default="", description="Cloudflare API token with Workers AI read access"
+    )
+    request_timeout_seconds: float = Field(
+        default=10.0, gt=0, description="Timeout for one hosted embedding request"
     )
 
 
@@ -436,13 +458,30 @@ class LLMSettings(BaseModel):
     ollama_model: str = Field(default="qwen3.5:4b", description="Ollama chat model name")
     ollama_base_url: str = Field(default="http://localhost:11434", description="Ollama server URL")
     anthropic_model: str = Field(
-        default="claude-haiku-4-5-20251001", description="Anthropic model id (provider=anthropic)"
+        default="claude-haiku-5-5", description="Anthropic model id (provider=anthropic)"
     )
     anthropic_api_key: str = Field(
         default="", description="Anthropic API key (required when provider=anthropic)"
     )
+    anthropic_effort: Literal["low", "medium", "high", "xhigh", "max"] = Field(
+        default="low",
+        description=(
+            "Claude effort level (output_config.effort). Claude Haiku 5.5 thinks by default and "
+            "bills thinking as output; 'low' keeps marketplace chat and keyword expansion cheap "
+            "and fast."
+        ),
+    )
+    anthropic_max_tokens: int = Field(
+        default=1024, ge=64, le=16000, description="Per-response output cap for Claude calls"
+    )
     temperature: float = Field(
-        default=0.2, ge=0.0, le=2.0, description="Sampling temperature (lower = steadier)"
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description=(
+            "Sampling temperature (lower = steadier). Applies to Ollama only: current Claude "
+            "models reject non-default sampling parameters, so it is never sent to Anthropic."
+        ),
     )
     retrieval_k: int = Field(
         default=6, ge=1, le=20, description="How many listings to ground the assistant with"
@@ -450,6 +489,15 @@ class LLMSettings(BaseModel):
     expand_queries: bool = Field(
         default=True,
         description="Use the LLM to expand vague searches into product keywords before embedding.",
+    )
+    expansion_timeout_seconds: float = Field(
+        default=4.0,
+        gt=0,
+        le=30.0,
+        description=(
+            "Timeout for one query-expansion call. Expansion runs inline on every smart search, "
+            "so on timeout the raw query is used rather than stalling the request."
+        ),
     )
     request_timeout_seconds: float = Field(
         default=25.0,
