@@ -1,9 +1,15 @@
 from functools import lru_cache
+from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.enums import LogLevel
+
+# backend/ (this file lives at backend/src/app/core/settings.py)
+_BACKEND_ROOT = Path(__file__).resolve().parents[3]
+_JWT_PLACEHOLDER = "CHANGE_ME_generate_a_secure_random_key_here"
 
 
 class AppMeta(BaseModel):
@@ -20,10 +26,18 @@ class AppMeta(BaseModel):
         ),
     )
 
+    expose_docs: bool = Field(
+        default=False,
+        description=(
+            "Keep /docs, /redoc and /openapi.json available in production (e.g. for a public "
+            "portfolio demo). Off by default so production hides the API surface."
+        ),
+    )
+
     @model_validator(mode="after")
     def _hide_docs_in_prod(self) -> "AppMeta":
-        """In production, force-disable interactive docs even if explicitly set."""
-        if self.environment.lower() == "production":
+        """In production, force-disable interactive docs unless explicitly exposed."""
+        if self.environment.lower() == "production" and not self.expose_docs:
             self.docs_url = None
             self.redoc_url = None
         return self
@@ -33,10 +47,15 @@ class AppMeta(BaseModel):
         """Whether the app is running in a production deployment."""
         return self.environment.lower() == "production"
 
+    @property
+    def openapi_enabled(self) -> bool:
+        """Whether the OpenAPI schema (backing /docs and /redoc) should be served."""
+        return not self.is_production or self.expose_docs
+
 
 class JWTSettings(BaseModel):
     secret_key: str = Field(
-        default="CHANGE_ME_generate_a_secure_random_key_here",
+        default=_JWT_PLACEHOLDER,
         min_length=32,
         description="The secret key for JWT (configure via environment variable)",
     )
@@ -118,13 +137,21 @@ class ListingSettings(BaseModel):
 class StorageSettings(BaseModel):
     """File storage configuration for uploaded images."""
 
+    root: str = Field(
+        default=str(_BACKEND_ROOT / "uploads"),
+        description=(
+            "Root directory served at /uploads. Listing images and profile pictures live in "
+            "its images/ and profiles/ subdirectories unless overridden below. Point this at "
+            "a persistent volume in production (e.g. /data/uploads)."
+        ),
+    )
     upload_dir: str = Field(
-        default="uploads/images",
-        description="Directory for storing uploaded images (relative to backend root)",
+        default="",
+        description="Directory for listing images (default: {root}/images)",
     )
     profile_upload_dir: str = Field(
-        default="uploads/profiles",
-        description="Directory for storing profile pictures (relative to backend root)",
+        default="",
+        description="Directory for profile pictures (default: {root}/profiles)",
     )
     max_file_size_mb: int = Field(
         default=5,
@@ -140,6 +167,15 @@ class StorageSettings(BaseModel):
         default=["image/jpeg", "image/png", "image/webp", "image/gif"],
         description="Allowed MIME types for image uploads",
     )
+
+    @model_validator(mode="after")
+    def _derive_subdirs(self) -> "StorageSettings":
+        """Default the image/profile directories to subdirectories of ``root``."""
+        if not self.upload_dir:
+            self.upload_dir = str(Path(self.root) / "images")
+        if not self.profile_upload_dir:
+            self.profile_upload_dir = str(Path(self.root) / "profiles")
+        return self
 
 
 class CORSSettings(BaseModel):
@@ -327,11 +363,32 @@ class AISettings(BaseModel):
 
 
 class EmbeddingSettings(BaseModel):
-    """Local text-embedding model configuration (fastembed, no API key)."""
+    """
+    Text-embedding configuration.
 
+    ``fastembed`` (default) runs the model locally and offline but needs ~1 GB of RAM
+    with onnxruntime. ``cloudflare`` calls the same BGE model hosted on Cloudflare
+    Workers AI, so a small production machine needs no local model at all.
+    """
+
+    provider: Literal["fastembed", "cloudflare"] = Field(
+        default="fastembed",
+        description="Embedding backend: 'fastembed' (local) or 'cloudflare' (Workers AI)",
+    )
     model: str = Field(
         default="BAAI/bge-small-en-v1.5",
         description="fastembed model used to embed listing text; runs locally and offline",
+    )
+    cloudflare_model: str = Field(
+        default="@cf/baai/bge-small-en-v1.5",
+        description="Workers AI model id; keep it the same model family as `model`",
+    )
+    cloudflare_account_id: str = Field(default="", description="Cloudflare account id")
+    cloudflare_api_token: str = Field(
+        default="", description="Cloudflare API token with Workers AI read access"
+    )
+    request_timeout_seconds: float = Field(
+        default=10.0, gt=0, description="Timeout for one hosted embedding request"
     )
 
 
@@ -343,6 +400,13 @@ class VectorStoreSettings(BaseModel):
         description=(
             "Qdrant server URL (e.g. http://localhost:6333). When empty, an embedded "
             "on-disk Qdrant at `path` is used (single-process, development only)."
+        ),
+    )
+    qdrant_api_key: str = Field(
+        default="",
+        description=(
+            "API key for a managed Qdrant server (e.g. Qdrant Cloud). Only used when "
+            "`qdrant_url` is set; leave empty for a local/unauthenticated server."
         ),
     )
     path: str = Field(
@@ -394,13 +458,30 @@ class LLMSettings(BaseModel):
     ollama_model: str = Field(default="qwen3.5:4b", description="Ollama chat model name")
     ollama_base_url: str = Field(default="http://localhost:11434", description="Ollama server URL")
     anthropic_model: str = Field(
-        default="claude-haiku-4-5-20251001", description="Anthropic model id (provider=anthropic)"
+        default="claude-haiku-5-5", description="Anthropic model id (provider=anthropic)"
     )
     anthropic_api_key: str = Field(
         default="", description="Anthropic API key (required when provider=anthropic)"
     )
+    anthropic_effort: Literal["low", "medium", "high", "xhigh", "max"] = Field(
+        default="low",
+        description=(
+            "Claude effort level (output_config.effort). Claude Haiku 5.5 thinks by default and "
+            "bills thinking as output; 'low' keeps marketplace chat and keyword expansion cheap "
+            "and fast."
+        ),
+    )
+    anthropic_max_tokens: int = Field(
+        default=1024, ge=64, le=16000, description="Per-response output cap for Claude calls"
+    )
     temperature: float = Field(
-        default=0.2, ge=0.0, le=2.0, description="Sampling temperature (lower = steadier)"
+        default=0.2,
+        ge=0.0,
+        le=2.0,
+        description=(
+            "Sampling temperature (lower = steadier). Applies to Ollama only: current Claude "
+            "models reject non-default sampling parameters, so it is never sent to Anthropic."
+        ),
     )
     retrieval_k: int = Field(
         default=6, ge=1, le=20, description="How many listings to ground the assistant with"
@@ -408,6 +489,15 @@ class LLMSettings(BaseModel):
     expand_queries: bool = Field(
         default=True,
         description="Use the LLM to expand vague searches into product keywords before embedding.",
+    )
+    expansion_timeout_seconds: float = Field(
+        default=4.0,
+        gt=0,
+        le=30.0,
+        description=(
+            "Timeout for one query-expansion call. Expansion runs inline on every smart search, "
+            "so on timeout the raw query is used rather than stalling the request."
+        ),
     )
     request_timeout_seconds: float = Field(
         default=25.0,
@@ -454,6 +544,26 @@ class Settings(BaseSettings):
     vector: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     sentry: SentrySettings = Field(default_factory=SentrySettings)
+
+    @model_validator(mode="after")
+    def _refuse_unsafe_production(self) -> "Settings":
+        """Fail fast instead of booting production with dev-only defaults."""
+        if not self.app.is_production:
+            return self
+        problems = []
+        if self.jwt.secret_key == _JWT_PLACEHOLDER:
+            problems.append("JWT__SECRET_KEY is still the placeholder")
+        if self.test.test_mode:
+            problems.append(
+                "TEST__TEST_MODE must be false (it exposes unauthenticated admin promotion)"
+            )
+        local = ("http://localhost", "http://127.0.0.1")
+        if any(origin.startswith(local) for origin in self.cors.allowed_origins):
+            problems.append("CORS__ALLOWED_ORIGINS still contains a localhost origin")
+        if problems:
+            msg = "Refusing to start in production: " + "; ".join(problems)
+            raise ValueError(msg)
+        return self
 
 
 @lru_cache

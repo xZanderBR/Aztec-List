@@ -1,0 +1,51 @@
+name: Deploy API
+
+# Deploy the backend to Fly.io after the Tests workflow passes on main.
+# The frontend deploys separately through Vercel's Git integration.
+#
+# Setup: create an app-scoped deploy token and store it as the FLY_API_TOKEN repo secret:
+#   fly tokens create deploy --app aztec-list-api
+# Until that secret exists, this workflow skips instead of failing.
+
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy backend to Fly.io
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Skip when Fly is not configured yet
+        if: env.FLY_API_TOKEN == ''
+        run: echo "::notice::FLY_API_TOKEN is not set; skipping deploy."
+
+      - name: Checkout the tested commit
+        if: env.FLY_API_TOKEN != ''
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up flyctl
+        if: env.FLY_API_TOKEN != ''
+        uses: superfly/flyctl-actions/setup-flyctl@1.6
+
+      - name: Deploy
+        if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only

@@ -1,7 +1,8 @@
+import sqlite3
 from collections.abc import Generator
 from typing import Any
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.settings import settings
@@ -32,6 +33,23 @@ engine = create_engine(
     echo=settings.db.echo,
     **_engine_kwargs(settings.db.database_url),
 )
+
+if settings.db.database_url.startswith("sqlite"):
+
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragmas(dbapi_connection: sqlite3.Connection, _record: object) -> None:
+        """
+        Make SQLite behave for a long-running server.
+
+        WAL lets readers proceed while a write is in progress, busy_timeout makes a
+        concurrent writer wait instead of failing with "database is locked", and
+        foreign_keys turns on FK enforcement (off by default in SQLite).
+        """
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

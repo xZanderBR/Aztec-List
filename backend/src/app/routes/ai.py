@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.llm import friendly_llm_error
 from app.core.rate_limiter import limiter
 from app.core.settings import settings
 from app.models.ai_conversation import AIConversation
@@ -74,7 +75,10 @@ async def generate_description(
         logger.exception("AI description generation failed")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Could not generate a description right now. Please try again or write your own.",
+            detail=friendly_llm_error(
+                exc,
+                "Could not generate a description right now. Please try again or write your own.",
+            ),
         ) from exc
     return GenerateDescriptionResponse(description=description)
 

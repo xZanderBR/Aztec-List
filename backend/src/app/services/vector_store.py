@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from app.core.enums import Category, Condition
     from app.models.listing import Listing
-    from app.services.embeddings import EmbeddingService
+    from app.services.embeddings import Embedder
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class VectorStoreService:
         *,
         location: str | None = None,
         collection: str | None = None,
-        embedder: EmbeddingService | None = None,
+        embedder: Embedder | None = None,
     ) -> None:
         # `location` overrides settings (used by tests, e.g. ":memory:").
         self._location = location
@@ -71,7 +71,10 @@ class VectorStoreService:
         if self._location is not None:
             return QdrantClient(location=self._location)
         if settings.vector.qdrant_url:
-            return QdrantClient(url=settings.vector.qdrant_url)
+            # Pass the API key only when one is configured (managed Qdrant Cloud);
+            # a bare local server needs no auth.
+            api_key = settings.vector.qdrant_api_key or None
+            return QdrantClient(url=settings.vector.qdrant_url, api_key=api_key)
         return QdrantClient(path=settings.vector.path)
 
     @property

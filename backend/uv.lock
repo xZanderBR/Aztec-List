@@ -125,10 +125,11 @@ wheels = [
 name = "aztec-list"
 version = "0.1.0"
 source = { virtual = "." }
+default-groups = ["dev", "local-ai"]
 dependencies = [
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
-    { name = "fastembed" },
+    { name = "httpx" },
     { name = "jinja2" },
     { name = "langchain" },
     { name = "langchain-anthropic" },
@@ -152,6 +153,9 @@ dev = [
     { name = "pre-commit" },
     { name = "ruff" },
 ]
+local-ai = [
+    { name = "fastembed" },
+]
 test = [
     { name = "httpx" },
     { name = "pytest" },
@@ -163,7 +167,7 @@ test = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.20.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.162.7" },
-    { name = "fastembed", specifier = ">=0.8.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "langchain", specifier = ">=1.5.0" },
     { name = "langchain-anthropic", specifier = ">=1.7.10" },
@@ -187,6 +191,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.7.0" },
     { name = "ruff", specifier = ">=0.17.5" },
 ]
+local-ai = [{ name = "fastembed", specifier = ">=0.9.1" }]
 test = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.2.0" },
