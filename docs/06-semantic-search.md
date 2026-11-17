@@ -11,7 +11,7 @@ search. Users toggle it with the **"Smart search (AI)"** switch on the listings 
 
 | Layer | File | Role |
 | :--- | :--- | :--- |
-| Embeddings | `services/embeddings.py` | Local [fastembed](https://github.com/qdrant/fastembed) model turns text into a vector. No API key, runs offline; the model is lazy-loaded on first use. |
+| Embeddings | `services/embeddings.py` | Turns text into a vector. Default: a local [fastembed](https://github.com/qdrant/fastembed) model (no API key, offline, lazy-loaded). Production: the same `bge-small` model on Cloudflare Workers AI (`EMBEDDING__PROVIDER=cloudflare`), CLS-pooled and normalized to match fastembed; `scripts/compare_embeddings.py` checks parity. |
 | Vector store | `services/vector_store.py` | [Qdrant](https://qdrant.tech) stores vectors + a small payload (category, condition, price, seller, is_active) and runs filtered similarity search. |
 | Search wiring | `services/listing.py` | `ListingService.get_filtered` branches to the vector path when `semantic=true` **and** `search_text` is set **and** AI is enabled; otherwise the keyword path is untouched. Falls back to keyword search on any error. |
 | Index lifecycle | `services/listing.py` | Create/update/delete upsert/remove the listing's vector (best-effort; failures are logged, never block the write). |
@@ -33,7 +33,9 @@ All nested under the `__` env delimiter (see `backend/.env.example`):
 | Variable | Default | Purpose |
 | :--- | :--- | :--- |
 | `AI__ENABLED` | `false` | Master switch. Off = keyword search only, no model loaded. |
+| `EMBEDDING__PROVIDER` | `fastembed` | `fastembed` (local) or `cloudflare` (Workers AI; also set `EMBEDDING__CLOUDFLARE_ACCOUNT_ID` / `EMBEDDING__CLOUDFLARE_API_TOKEN`). |
 | `EMBEDDING__MODEL` | `BAAI/bge-small-en-v1.5` | fastembed model (see benchmark below). |
+| `EMBEDDING__CLOUDFLARE_MODEL` | `@cf/baai/bge-small-en-v1.5` | Workers AI model; keep it the same family as `EMBEDDING__MODEL`. |
 | `VECTOR__QDRANT_URL` | `""` | Qdrant server URL. Empty → embedded on-disk at `VECTOR__PATH`. |
 | `VECTOR__PATH` | `./qdrant_data` | On-disk path for embedded Qdrant. |
 | `VECTOR__COLLECTION` | `listings` | Collection name. |

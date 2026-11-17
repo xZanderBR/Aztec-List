@@ -1,36 +1,51 @@
-# Fly.io configuration for the Aztec List backend.
+# Fly.io configuration for the Aztec List API (portfolio sandbox demo).
 #
-# First-time setup (see docs/09-deployment.md for the full walkthrough):
-#   fly launch --no-deploy            # create the app from this file
-#   fly volumes create uploads --size 3 --region sjc
-#   fly secrets set JWT__SECRET_KEY=... DB__DATABASE_URL=... (etc.)
+# One always-on shared-cpu-1x / 512 MB machine with a 1 GB volume (~$3.84/month list).
+# Everything stateful lives on the volume at /data: the SQLite database, uploaded images,
+# and the embedded Qdrant index. That pins the app to exactly one machine and one
+# process, which it needs anyway (in-process WebSocket fan-out and rate limiter).
+#
+# First-time setup and the full walkthrough: docs/11-deployment.md
+#   fly launch --no-deploy --copy-config
+#   fly volumes create data --size 1 --region iad
+#   fly secrets set JWT__SECRET_KEY=... LLM__ANTHROPIC_API_KEY=... \
+#     EMBEDDING__CLOUDFLARE_ACCOUNT_ID=... EMBEDDING__CLOUDFLARE_API_TOKEN=...
 #   fly deploy
 #
-# Secrets (JWT key, DB URL, API keys) are set with `fly secrets set` and injected as
-# env vars at runtime; only non-sensitive defaults live in [env] below.
+# Secrets are injected as env vars at runtime; only non-sensitive config lives in [env].
+# Replace azteclist.example.com with the real frontend domain before deploying.
 
-app = "aztec-list-backend"
-primary_region = "sjc" # San Jose; pick the region nearest your users and database
+app = "aztec-list-api"
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
 
-[deploy]
-  # Apply database migrations in a one-off machine before the new release goes live.
-  release_command = "alembic upgrade head"
+# No [deploy] release_command: release machines do not mount volumes, so migrations run
+# in the container entrypoint (docker-entrypoint.sh) before the server starts.
 
 [env]
   APP__ENVIRONMENT = "production"
+  APP__EXPOSE_DOCS = "true"
   LOGGING__USE_JSON = "true"
   LOGGING__LEVEL = "INFO"
-  STORAGE__UPLOAD_DIR = "uploads/images"
-  # Prod LLM: drop the Ollama sibling, use Anthropic (Claude). The API key is a secret.
+  DATA_DIR = "/data"
+  DB__DATABASE_URL = "sqlite:////data/aztec_list.db"
+  STORAGE__ROOT = "/data/uploads"
+  VECTOR__PATH = "/data/qdrant"
+  AI__ENABLED = "true"
+  EMBEDDING__PROVIDER = "cloudflare"
   LLM__PROVIDER = "anthropic"
+  LLM__ANTHROPIC_MODEL = "claude-haiku-5-5"
+  LLM__ANTHROPIC_EFFORT = "low"
+  DEMO__ENABLED = "true"
+  CORS__ALLOWED_ORIGINS = '["https://azteclist.example.com"]'
+  CORS__FRONTEND_URL = "https://azteclist.example.com"
 
 [http_service]
   internal_port = 8000
   force_https = true
-  # Always-on: WebSocket connections must persist, so do not auto-stop the machine.
+  # Always-on: no cold starts for visitors, and WebSocket connections must persist.
   auto_stop_machines = "off"
   auto_start_machines = true
   min_machines_running = 1
@@ -40,21 +55,29 @@ primary_region = "sjc" # San Jose; pick the region nearest your users and databa
     soft_limit = 200
     hard_limit = 250
 
+  # Liveness: the process and event loop are up.
   [[http_service.checks]]
     interval = "15s"
     timeout = "2s"
-    grace_period = "10s"
+    grace_period = "30s"
     method = "GET"
     path = "/health"
 
-# Interim persistent volume for uploaded images on a single machine. Remove this once
-# uploads move to Cloudflare R2 (issue #104); object storage is the multi-instance fix.
+  # Readiness: database and vector store reachable.
+  [[http_service.checks]]
+    interval = "60s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/ready"
+
 [mounts]
-  source = "uploads"
-  destination = "/app/uploads"
+  source = "data"
+  destination = "/data"
 
 [[vm]]
   size = "shared-cpu-1x"
-  # 2GB headroom for the in-process fastembed/onnxruntime model used by vector search.
-  # Drop to 1GB if you run with AI__ENABLED=false.
-  memory = "2gb"
+  memory = "512mb"
+
+# Headroom for brief spikes (argon2 hashing uses 64 MiB per login) without OOM kills.
+swap_size_mb = 512

@@ -1,120 +1,199 @@
 # Deployment
 
-How to take Aztec List from the repo to a live environment. The app code is
-production-shaped (security headers, health/readiness probes, Alembic migrations,
-gated Sentry, prod config flags); this guide covers the hosting around it.
+How Aztec List runs as a public portfolio **sandbox demo**: always on, on a custom
+domain, for about $4 a month or less. Visitors log in as seeded demo personas (no
+signup, no email), the data resets on a schedule, and the AI features stay on.
 
-## Chosen stack
+## Architecture
 
-| Concern            | Service                          | Why |
-| ------------------ | -------------------------------- | --- |
-| Frontend           | Vercel                           | First-class Next.js host, env + preview deploys |
-| Backend            | Fly.io                           | Always-on container, native WebSockets, persistent volume |
-| Postgres           | Neon (or Fly Postgres)           | Managed; just a connection string |
-| Vector store       | Qdrant Cloud (free tier)         | Managed Qdrant in server mode |
-| Uploads + CDN      | Cloudflare R2                    | S3-compatible, zero egress, built-in CDN (issue #104) |
-| LLM (prod)         | Anthropic (Claude Haiku)         | No model server to host; factory already supports it |
-| Email              | Resend                           | Already integrated |
-| Error tracking     | Sentry                           | Already integrated, gated on `SENTRY__DSN` |
-
-Single backend instance for now: the WebSocket fan-out and in-memory rate limiter are
-per-process. Horizontal scale (multiple machines/workers) needs Redis pub/sub, which is
-deliberately deferred.
-
-## 1. Backend on Fly.io
-
-Config lives in `backend/fly.toml`. The production `backend/Dockerfile` is multi-stage,
-runs as a non-root user, and serves with `uvicorn` (no `--reload`, single worker).
-
-```bash
-cd backend
-fly launch --no-deploy                              # creates the app from fly.toml
-fly volumes create uploads --size 3 --region sjc    # interim image storage (until R2)
+```
+Browser ── https://azteclist.<domain> ──► Vercel Hobby (Next.js 16, client-rendered)
+   └──── https/wss://api.azteclist.<domain> ──► Fly.io, 1× shared-cpu-1x 512 MB, iad, always-on
+                                                  ├─ volume /data (1 GB): SQLite DB, uploads/, qdrant/
+                                                  ├─► Cloudflare Workers AI  @cf/baai/bge-small-en-v1.5 (embeddings)
+                                                  └─► Anthropic API  Claude Haiku 5.5 (assistant, query expansion, descriptions)
 ```
 
-Set secrets (injected as env vars at runtime; never commit these):
+| Concern | Service | Why |
+| --- | --- | --- |
+| Frontend | Vercel Hobby | First-class Next.js host, free for personal projects, preview deploys |
+| Backend | Fly.io | Always-on container (no cold start), native WebSockets, persistent volume |
+| Database | SQLite on the Fly volume | The app is single-instance by design; no external DB quota to exhaust; trivial resets |
+| Vector store | Embedded Qdrant on the volume | Same code path as local dev; demo-scale data |
+| Embeddings | Cloudflare Workers AI | Same BGE model as local fastembed, no ~1 GB ONNX runtime on the server |
+| LLM | Anthropic, Claude Haiku 5.5 | Cheapest current Claude; `effort: low` |
+| Error tracking | Sentry (optional) | Gated on `SENTRY__DSN` |
+
+**Why one machine.** WebSocket fan-out, the rate limiter, and embedded Qdrant all keep
+state in the process, and uploads live on local disk. So the backend runs exactly one
+process on one machine (`--workers 1`, `WEB_CONCURRENCY=1`). Scaling out would need
+Redis pub/sub, object storage (R2), and Postgres. That is deliberately deferred.
+
+**Why SQLite here.** Postgres stays the docker-compose and dev default. For a
+single-machine demo, SQLite on the volume is simpler and has no free-tier compute
+quota to run out. The engine enables WAL mode, a busy timeout and foreign keys
+(`app/core/database.py`). Migrations are the same Alembic revisions either way.
+
+## Cost
+
+| Item | Monthly |
+| --- | --- |
+| Fly shared-cpu-1x 512 MB, always-on (iad) | $3.69 list |
+| Fly 1 GB volume | $0.15 |
+| Fly certificates, shared IPv4 | $0 |
+| Vercel Hobby | $0 |
+| Workers AI (10k free neurons/day ≈ 5M embedding tokens/day) | $0 |
+| Anthropic (dedicated workspace with a hard monthly spend limit) | ≤ the limit you set |
+
+Fly currently waives personal-organization bills under $5, so the likely Fly charge is
+$0. If the Anthropic limit is hit, the assistant replies "The demo's AI budget is used
+up for this month" and smart search falls back to the raw query.
+
+## How the container starts
+
+`backend/Dockerfile` is multi-stage. It installs runtime dependencies only
+(`uv sync --no-default-groups` skips dev tools and the `local-ai` fastembed group) and
+runs as the non-root `app` user. `backend/docker-entrypoint.sh`:
+
+1. Starts as root, creates `/data/uploads` and `/data/qdrant`, and `chown`s `/data`.
+   Fly volumes mount root-owned.
+2. Drops to `app` with `setpriv`.
+3. In production, runs `alembic upgrade head`. This can't be a Fly `release_command`,
+   because release machines don't mount volumes.
+4. Starts `uvicorn` with one worker.
+
+Production refuses to boot when any of these is true (`app/core/settings.py`):
+- the JWT secret is still the placeholder
+- `TEST__TEST_MODE` is on
+- the CORS origins include localhost
+
+Rate limits key on Fly's `Fly-Client-IP` header (`app/core/rate_limiter.py`), so each
+visitor gets their own bucket behind the proxy.
+
+## One-time setup
+
+### 1. Accounts and keys (you)
+
+- **Fly.io:** create an account and add a card. Install `flyctl` and run `fly auth login`.
+- **Cloudflare:** create a free account. Create an API token with the **Workers AI: Read**
+  permission and note your account ID.
+- **Anthropic:**
+  1. In the Console, create a workspace (e.g. `aztec-list-demo`).
+  2. Set its monthly **spend limit** (for example $1).
+  3. Create an API key in that workspace.
+
+  The workspace limit is a hard cap. At the limit the API rejects requests instead of
+  billing. The default workspace can't have its own limit.
+- **Vercel:** sign in with GitHub.
+
+### 2. Check the embedding parity (optional, recommended)
+
+Run this from `backend/` with the Cloudflare credentials. It confirms the hosted model
+matches the local fastembed vectors that the search tuning was done with (see
+`docs/06-semantic-search.md`):
 
 ```bash
-fly secrets set \
-  JWT__SECRET_KEY="$(uv run python -c 'import secrets;print(secrets.token_urlsafe(32))')" \
-  DB__DATABASE_URL="postgresql://...neon..." \
-  CORS__ALLOWED_ORIGINS='["https://your-frontend.vercel.app"]' \
-  CORS__FRONTEND_URL="https://your-frontend.vercel.app" \
-  EMAIL__RESEND_API_KEY="re_..." \
-  EMAIL__FROM_EMAIL="noreply@yourdomain.com" \
-  AI__ENABLED="true" \
-  VECTOR__QDRANT_URL="https://...qdrant-cloud..." \
-  VECTOR__QDRANT_API_KEY="..." \
-  LLM__ANTHROPIC_API_KEY="sk-ant-..." \
-  SENTRY__DSN="https://...ingest.sentry.io/..."
+EMBEDDING__CLOUDFLARE_ACCOUNT_ID=... EMBEDDING__CLOUDFLARE_API_TOKEN=... uv run python scripts/compare_embeddings.py
+```
+
+### 3. Backend on Fly.io
+
+In `backend/fly.toml`, replace `azteclist.example.com` with your frontend domain. Then,
+from `backend/`:
+
+```bash
+fly launch --no-deploy --copy-config      # creates the app from fly.toml
 ```
 
 ```bash
-fly deploy    # builds the image; release_command runs `alembic upgrade head` first
+fly volumes create data --size 1 --region iad
 ```
 
-`[deploy].release_command` applies migrations before the new release takes traffic, so
-the schema is always current. The `/health` check gates the rollout.
+```bash
+fly secrets set JWT__SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" \
+  LLM__ANTHROPIC_API_KEY=... \
+  EMBEDDING__CLOUDFLARE_ACCOUNT_ID=... \
+  EMBEDDING__CLOUDFLARE_API_TOKEN=...
+```
 
-## 2. Postgres (Neon)
+```bash
+fly deploy
+```
 
-Create a Neon project, copy the pooled connection string into `DB__DATABASE_URL` (above).
-Migrations run automatically on deploy via the release command; to run them by hand:
-`fly ssh console -C "alembic upgrade head"`.
+```bash
+fly certs add api.azteclist.<domain>
+```
 
-## 3. Vector store (Qdrant Cloud)
+Optional: `fly secrets set SENTRY__DSN=...`.
 
-Create a free Qdrant Cloud cluster, then set `VECTOR__QDRANT_URL` + `VECTOR__QDRANT_API_KEY`.
-After the first deploy, build the index once:
+### 4. Frontend on Vercel
+
+Import `xZanderBR/aztec-list` and set the root directory to `frontend`. Set these
+environment variables. They are inlined at build time, so redeploy after changing them:
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://api.azteclist.<domain>/api/v1` |
+| `NEXT_PUBLIC_STATIC_BASE_URL` | `https://api.azteclist.<domain>` |
+
+WebSocket URLs are derived from `NEXT_PUBLIC_API_BASE_URL`, so `https` becomes `wss`.
+Add the domain `azteclist.<domain>` in the project settings.
+
+### 5. DNS
+
+| Record | Name | Target |
+| --- | --- | --- |
+| CNAME | `azteclist` | `cname.vercel-dns.com` |
+| CNAME | `api.azteclist` | `aztec-list-api.fly.dev` |
+
+Both platforms issue TLS certificates automatically once DNS resolves. On Cloudflare
+DNS, set both records to **DNS only** (grey cloud) so the platforms can issue their
+certificates.
+
+### 6. Continuous deployment
+
+- **Backend:** `.github/workflows/deploy.yml` deploys to Fly after the Tests workflow
+  passes on `main`. Create a deploy token and add it as the `FLY_API_TOKEN` repository
+  secret:
+
+  ```bash
+  fly tokens create deploy --app aztec-list-api
+  ```
+
+  Until the secret exists, the workflow skips.
+- **Frontend:** Vercel deploys `main` and builds previews for pull requests
+  automatically.
+
+### 7. Monitoring
+
+- Fly checks `/health` (liveness) and `/ready` (database and vector store).
+- Add a free uptime monitor (for example UptimeRobot) on `https://api.azteclist.<domain>/ready`
+  and on the site.
+- `fly logs` streams JSON logs.
+
+## Operations
+
+Show logs and machine state:
+
+```bash
+fly logs
+```
+
+```bash
+fly status
+```
+
+Rebuild the vector index:
 
 ```bash
 fly ssh console -C "python scripts/reindex_listings.py"
 ```
 
-If you ship without AI, set `AI__ENABLED=false` and skip Qdrant entirely.
+Shell into the machine:
 
-## 4. Uploads + CDN (Cloudflare R2) — issue #104
-
-Until the R2 storage backend lands, uploads use the Fly volume mounted at `/app/uploads`
-(works on a single machine; lost capacity to scale out). The R2 migration will:
-
-- Add an S3-compatible storage backend selected by a `STORAGE__BACKEND` setting.
-- Write/read images through the R2 bucket; serve them via the R2 public/CDN domain set in
-  the frontend's `NEXT_PUBLIC_STATIC_BASE_URL`.
-- Let you drop the `[mounts]` volume from `fly.toml` and run multiple machines.
-
-R2 specifics (bucket, CORS for the upload path, signed URLs if private) are tracked in #104.
-
-## 5. LLM (Anthropic)
-
-`fly.toml` sets `LLM__PROVIDER=anthropic`; provide `LLM__ANTHROPIC_API_KEY` as a secret.
-The Ollama container from `docker-compose.yml` is not deployed. To keep the local model for
-chat while using Claude for moderation/auto-description, set `LLM__ASSIST_PROVIDER=anthropic`
-and leave `LLM__PROVIDER=ollama` (hybrid) — but in a hosted, no-Ollama environment use
-`anthropic` for both.
-
-## 6. Frontend on Vercel
-
-Import the repo, set the project root to `frontend/`, and configure env:
-
-```
-NEXT_PUBLIC_API_BASE_URL=https://aztec-list-backend.fly.dev/api/v1
-NEXT_PUBLIC_STATIC_BASE_URL=https://<r2-public-domain>   # or the Fly URL until R2 lands
+```bash
+fly ssh console
 ```
 
-Vercel runs `bun install` + `bun run build` automatically. After the frontend domain is
-known, update the backend's `CORS__ALLOWED_ORIGINS` / `CORS__FRONTEND_URL` secrets to match.
-
-## Pre-launch checklist
-
-The full per-variable list is in `backend/.env.example` under "PRODUCTION OVERRIDES
-CHECKLIST". The essentials:
-
-- [ ] `APP__ENVIRONMENT=production` (disables `/docs`, `/redoc`, `/openapi.json`)
-- [ ] `JWT__SECRET_KEY` rotated to a fresh 32+ char random value
-- [ ] `DB__DATABASE_URL` points at managed Postgres
-- [ ] `CORS__ALLOWED_ORIGINS` is the exact frontend origin (never `*` with credentials)
-- [ ] `LOGGING__USE_JSON=true`, `TEST__TEST_MODE=false`, `RATE_LIMIT__ENABLED=true`
-- [ ] `SENTRY__DSN` set (recommended)
-- [ ] `alembic upgrade head` has run against the prod database (automatic via deploy)
-- [ ] `/health` returns 200 and `/ready` reflects DB + Qdrant
+Size check: the production image has no ONNX runtime. If memory ever runs tight, the
+machine has 512 MB of swap (`swap_size_mb` in `fly.toml`) before anything is killed.
