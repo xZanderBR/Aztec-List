@@ -1,10 +1,24 @@
 # Aztec List
 
+**Live demo: [azteclist.com](https://azteclist.com)**: one-click sample accounts, no signup ([API docs](https://api.azteclist.com/docs))
+
 > Originally built as a team project for CompE 561 (Fall 2025) at San Diego State University with [hyp5253](https://github.com/hyp5253), [Bmustoe](https://github.com/Bmustoe), and [AntonioHengel7](https://github.com/AntonioHengel7). The original repository, including its full issue and pull-request history, lives at [SDSU-CompE-561-Fall-2025/aztec-list](https://github.com/SDSU-CompE-561-Fall-2025/aztec-list).
 
 ## Overview
 
-Aztec List is an OfferUp-style marketplace for college students. Students can post items with photos and descriptions, browse/search listings, and (in later iterations) coordinate sales via messaging. Prices are typically lower than MSRP.
+Aztec List is an OfferUp-style marketplace for college students. Students can post items with photos and descriptions, browse/search listings, and coordinate sales through real-time messaging. Prices are typically lower than MSRP.
+
+## Try the demo
+
+[azteclist.com](https://azteclist.com) is a sandbox: pick a sample account on the login page instead of signing up.
+
+- **Maya** (seller) has listings and buyers messaging her.
+- **Jordan** (buyer) has a few conversations going, including a suspicious one to report.
+- **Alex** (moderator) can review flagged listings, message reports and support tickets.
+
+Post a listing with photos, chat in real time, try **Smart search** (semantic search, e.g. "gta" or "keep drinks cold in my room") or the **Ask AI** shopping assistant. All data resets to the sample set every few hours.
+
+The demo runs on Vercel (frontend) and a single Fly.io machine (API), with embeddings from Cloudflare Workers AI and Claude Haiku for the assistant. See [docs/11-deployment.md](docs/11-deployment.md).
 
 ## Project Structure
 
