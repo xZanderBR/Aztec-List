@@ -66,17 +66,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 sm:gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="text-2xl font-bold">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <div className="text-xl font-bold sm:text-2xl">
             <span className="text-purple-500">Aztec</span>
             <span className="text-foreground">List</span>
           </div>
         </Link>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="max-w-2xl flex-1">
+        <form onSubmit={handleSearch} className="max-w-2xl min-w-0 flex-1">
           <div className="relative">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -90,7 +90,7 @@ export function Header() {
         </form>
 
         {/* Auth Buttons / User Menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <ThemeSwitcher />
           {isLoading || (isAuthenticated && isProfileLoading) ? (
             // Show placeholder while checking auth or loading profile to avoid flash
@@ -105,18 +105,21 @@ export function Header() {
               )}
             </div>
           ) : !isAuthenticated ? (
-            <>
-              <Button variant="outline" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
+            isDemo ? (
+              // In the demo, login *is* the persona picker, so one button is enough.
               <Button asChild className="bg-purple-600 text-white hover:bg-purple-700">
-                {isDemo ? (
-                  <Link href="/login">Try the demo</Link>
-                ) : (
-                  <Link href="/signup">Sign Up</Link>
-                )}
+                <Link href="/login">Try the demo</Link>
               </Button>
-            </>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button asChild className="bg-purple-600 text-white hover:bg-purple-700">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

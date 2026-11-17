@@ -34,9 +34,9 @@ export function DemoBanner() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b border-purple-500/30 bg-purple-600/10 px-4 py-1.5 text-center text-sm"
+      className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 border-b border-purple-500/30 bg-purple-600/10 px-4 py-1.5 text-center text-xs sm:text-sm"
     >
-      <FlaskConical className="h-4 w-4 text-purple-500" aria-hidden />
+      <FlaskConical className="hidden h-4 w-4 text-purple-500 sm:block" aria-hidden />
       <span>
         <span className="font-medium">Sandbox demo.</span> Try anything; all data resets
         {demo.next_reset_at && now !== null
