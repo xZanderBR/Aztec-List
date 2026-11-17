@@ -228,7 +228,6 @@ class TestSaveProfilePicture:
 
         user_id = uuid.uuid4()
         file_data = b"fake image data"
-        upload_file = UploadFile(filename="profile.jpg", file=io.BytesIO(file_data))
 
         mock_optimize.return_value = (b"optimized data", ".jpg")
 
@@ -237,7 +236,9 @@ class TestSaveProfilePicture:
             patch("pathlib.Path.write_bytes") as mock_write,
             patch("pathlib.Path.glob", return_value=[]),  # No old files
         ):
-            result = await save_profile_picture(upload_file, user_id)
+            result = await save_profile_picture(
+                UploadFile(filename="profile.jpg", file=io.BytesIO(file_data)), user_id
+            )
 
         mock_optimize.assert_called_once_with(file_data)
         mock_write.assert_called_once_with(b"optimized data")

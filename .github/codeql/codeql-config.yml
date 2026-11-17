@@ -8,3 +8,13 @@ name: "CodeQL config"
 # is honoured for interpreted languages built with build-mode: none.)
 paths-ignore:
   - backend/alembic/versions
+
+# The SQLAlchemy models reference each other's classes only for type hints, imported
+# under `if TYPE_CHECKING:` (never executed at runtime; relationship() resolves the
+# targets by name). py/unsafe-cyclic-import does not model the TYPE_CHECKING guard, so
+# it reports every model pair as a runtime import cycle. A real cycle would raise an
+# ImportError at import time, which the test suite catches, so the query adds only
+# false positives here.
+query-filters:
+  - exclude:
+      id: py/unsafe-cyclic-import
