@@ -23,6 +23,26 @@ export const EMAIL_SEND_FAILED_KEY = "email_send_failed" as const;
 export const BANNED_HANDLED_KEY = "banned_handler_called" as const;
 
 /**
+ * Log in as a seeded demo persona (sandbox demo deployments only).
+ *
+ * @param personaKey - Persona key from `GET /config` (e.g. "maya")
+ * @returns AuthToken with access token and user data
+ * @throws Error if demo mode is off or the persona is unknown
+ */
+export const demoLogin = async (personaKey: string): Promise<AuthToken> => {
+  const res = await fetch(`${API_BASE_URL}/auth/demo/${encodeURIComponent(personaKey)}`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: "Demo login failed" }));
+    throw new Error(errorData.detail || "Demo login failed");
+  }
+
+  return (await res.json()) as AuthToken;
+};
+
+/**
  * Authenticate user and return access token.
  *
  * @param credentials - User login credentials (username/email and password)

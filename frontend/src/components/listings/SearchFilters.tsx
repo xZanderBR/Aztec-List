@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 const PRICE_ERROR_MESSAGE = "Min price must be less than max price";
 
@@ -165,7 +166,9 @@ export function SearchFilters() {
     }
   };
 
-  const semanticEnabled = searchParams.get("semantic") === "true";
+  const { ai } = useAppConfig();
+  const semanticAvailable = ai.semantic_search;
+  const semanticEnabled = semanticAvailable && searchParams.get("semantic") === "true";
 
   const handleSemanticToggle = (checked: boolean) => {
     updateURL({ semantic: checked ? "true" : undefined, offset: undefined });
@@ -175,24 +178,26 @@ export function SearchFilters() {
 
   const filtersContent = (
     <div className="space-y-6">
-      {/* Search Mode Section */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Search Mode</h3>
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            checked={semanticEnabled}
-            onChange={(e) => handleSemanticToggle(e.target.checked)}
-            className="mt-0.5 rounded border bg-background text-purple-500 focus:ring-2 focus:ring-purple-500"
-          />
-          <span>
-            Smart search (AI)
-            <span className="block text-xs text-muted-foreground">
-              Finds items by meaning, not just exact keywords.
+      {/* Search Mode Section (only when the backend has semantic search) */}
+      {semanticAvailable && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-foreground">Search Mode</h3>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={semanticEnabled}
+              onChange={(e) => handleSemanticToggle(e.target.checked)}
+              className="mt-0.5 rounded border bg-background text-purple-500 focus:ring-2 focus:ring-purple-500"
+            />
+            <span>
+              Smart search (AI)
+              <span className="block text-xs text-muted-foreground">
+                Finds items by meaning, not just exact keywords.
+              </span>
             </span>
-          </span>
-        </label>
-      </div>
+          </label>
+        </div>
+      )}
 
       {/* Category Section */}
       <div>

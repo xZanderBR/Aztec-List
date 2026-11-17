@@ -11,15 +11,7 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-        pathname: "/uploads/**",
-      },
-    ],
-    unoptimized: true, // Allow localhost/127.0.0.1 in development
+    unoptimized: true, // Served as-is from the API host (NEXT_PUBLIC_STATIC_BASE_URL)
   },
 };
 

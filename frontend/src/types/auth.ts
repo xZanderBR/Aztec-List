@@ -33,6 +33,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  demoLogin: (personaKey: string) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
 }

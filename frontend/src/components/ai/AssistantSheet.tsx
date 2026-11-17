@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { LISTINGS_BASE_URL } from "@/lib/constants";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 const ACCENT = "bg-purple-600 text-white hover:bg-purple-700";
 
@@ -79,6 +80,7 @@ function MessageBubble({
 
 export function AssistantSheet() {
   const { isAuthenticated } = useAuth();
+  const { ai } = useAppConfig();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const { messages, isStreaming, error, sendMessage } = useAIChat();
@@ -88,7 +90,7 @@ export function AssistantSheet() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !ai.assistant) return null;
 
   const handleSend = () => {
     const text = input.trim();

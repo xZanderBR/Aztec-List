@@ -12,9 +12,11 @@ import { DEFAULT_SORT, DEFAULT_LIMIT } from "@/lib/constants";
 import { CATEGORIES, Category } from "@/types/listing/filters/category";
 import { CONDITIONS, Condition } from "@/types/listing/filters/condition";
 import { SORT_OPTIONS, Sort } from "@/types/listing/filters/sort";
+import { useAppConfig } from "@/hooks/useAppConfig";
 
 function ListingsContent() {
   const searchParams = useSearchParams();
+  const { ai } = useAppConfig();
 
   // Extract and validate filter parameters from URL
   const parsePrice = (value: string | null): number | undefined => {
@@ -41,7 +43,8 @@ function ListingsContent() {
         : undefined,
     sort:
       sortParam && SORT_OPTIONS.includes(sortParam as Sort) ? (sortParam as Sort) : DEFAULT_SORT,
-    semantic: searchParams.get("semantic") === "true",
+    // Only ask for (and label) smart results when the backend has semantic search on
+    semantic: ai.semantic_search && searchParams.get("semantic") === "true",
     limit: DEFAULT_LIMIT,
     offset: parseInt(searchParams.get("offset") ?? "0", 10) || 0,
   };

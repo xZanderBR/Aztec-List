@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LISTINGS_BASE_URL, DEFAULT_SORT } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAppConfig } from "@/hooks/useAppConfig";
 import { LogOut, Settings, User, Search, Shield, Mail, MessageSquare } from "lucide-react";
 import { createProfileQueryOptions } from "@/queryOptions/createProfileQueryOptions";
 import { getProfilePictureUrl } from "@/lib/profile-picture";
@@ -26,6 +27,7 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { isDemo } = useAppConfig();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch profile data using React Query
@@ -108,7 +110,11 @@ export function Header() {
                 <Link href="/login">Login</Link>
               </Button>
               <Button asChild className="bg-purple-600 text-white hover:bg-purple-700">
-                <Link href="/signup">Sign Up</Link>
+                {isDemo ? (
+                  <Link href="/login">Try the demo</Link>
+                ) : (
+                  <Link href="/signup">Sign Up</Link>
+                )}
               </Button>
             </>
           ) : (

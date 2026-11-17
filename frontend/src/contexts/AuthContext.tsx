@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   login as apiLogin,
+  demoLogin as apiDemoLogin,
   signup as apiSignup,
   setAuthToken,
   getAuthToken,
@@ -26,7 +27,7 @@ import {
   BANNED_HANDLED_KEY,
   type AuthSessionEndedDetail,
 } from "@/lib/auth";
-import { AuthContextType, LoginCredentials, SignupData, User } from "@/types/auth";
+import { AuthContextType, AuthToken, LoginCredentials, SignupData, User } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -103,23 +104,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [queryClient, router]);
 
+  const startSession = (authToken: AuthToken): void => {
+    setAuthToken(authToken.access_token);
+    setStoredUser(authToken.user);
+
+    // Clear cached data from any previous session
+    queryClient.clear();
+
+    // New session: let a ban on this account be handled again
+    sessionStorage.removeItem(BANNED_HANDLED_KEY);
+
+    notifyAuthListeners();
+  };
+
   const login = async (credentials: LoginCredentials): Promise<void> => {
     try {
       setIsLoading(true);
-      const authToken = await apiLogin(credentials);
+      startSession(await apiLogin(credentials));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      setAuthToken(authToken.access_token);
-      setStoredUser(authToken.user);
-
-      // Clear cached data from any previous session
-      queryClient.clear();
-
-      // New session: let a ban on this account be handled again
-      sessionStorage.removeItem(BANNED_HANDLED_KEY);
-
-      notifyAuthListeners();
-    } catch (error) {
-      throw error;
+  const demoLogin = async (personaKey: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      startSession(await apiDemoLogin(personaKey));
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     isLoading: isLoading || !isHydrated,
     login,
+    demoLogin,
     signup,
     logout,
   };
