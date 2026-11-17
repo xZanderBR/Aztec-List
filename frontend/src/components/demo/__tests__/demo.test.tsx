@@ -111,7 +111,7 @@ describe("DemoBanner", () => {
     expect(await screen.findByText(/resets in 3h 1[12]m/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View source" })).toHaveAttribute(
       "href",
-      "https://github.com/xZanderBR/aztec-list",
+      "https://github.com/xZanderBR/Aztec-List",
     );
   });
 

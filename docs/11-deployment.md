@@ -203,7 +203,7 @@ takes a few minutes.
 
 ### 6. Frontend on Vercel
 
-1. Add New → Project → import `xZanderBR/aztec-list`.
+1. Add New → Project → import `xZanderBR/Aztec-List`.
 2. Set the **Root Directory** to `frontend`. The framework (Next.js) and package manager
    (bun, from `bun.lock`) are detected automatically.
 3. Add these environment variables before the first deploy. They are inlined at build
@@ -242,7 +242,7 @@ logs you in. Live chat working proves `wss://api.azteclist.com` and CORS.
   ```
 
   ```bash
-  gh secret set FLY_API_TOKEN -R xZanderBR/aztec-list
+  gh secret set FLY_API_TOKEN -R xZanderBR/Aztec-List
   ```
 
   Until the secret exists, the workflow skips instead of failing.
