@@ -34,7 +34,8 @@ def _frames(size: tuple[int, int] = (120, 90)) -> list[Image.Image]:
 
 def _assert_no_metadata(data: bytes) -> Image.Image:
     image = Image.open(io.BytesIO(data))
-    assert not image.getexif()
+    exif = image.getexif()
+    assert not exif
     assert "exif" not in image.info
     assert "xmp" not in image.info
     assert "comment" not in image.info
@@ -79,7 +80,8 @@ class TestSmallJpeg:
 
         data, _ = strip_exif_and_optimize(original)
 
-        assert Image.open(io.BytesIO(data)).info.get("icc_profile") == icc
+        kept_icc = Image.open(io.BytesIO(data)).info.get("icc_profile")
+        assert kept_icc == icc
 
     def test_clean_jpeg_is_returned_unchanged(self) -> None:
         original = _encode(Image.new("RGB", (200, 150), "red"), "JPEG")
@@ -96,7 +98,8 @@ class TestSmallJpeg:
 
         data, _ = strip_exif_and_optimize(original)
 
-        assert _assert_no_metadata(data).size == (100, 200)
+        image = _assert_no_metadata(data)
+        assert image.size == (100, 200)
 
 
 @pytest.mark.unit
@@ -127,7 +130,8 @@ class TestOptimizedJpeg:
         data, extension = strip_exif_and_optimize(original)
 
         assert extension == ".jpg"
-        assert _assert_no_metadata(data).size == (100, 200)
+        image = _assert_no_metadata(data)
+        assert image.size == (100, 200)
 
 
 @pytest.mark.unit
@@ -156,7 +160,8 @@ class TestSmallWebp:
         data, extension = strip_exif_and_optimize(original)
 
         assert extension == ".webp"
-        assert _assert_no_metadata(data).n_frames == len(frames)
+        image = _assert_no_metadata(data)
+        assert image.n_frames == len(frames)
 
     def test_clean_webp_is_returned_unchanged(self) -> None:
         original = _encode(Image.new("RGB", (200, 150), "blue"), "WEBP")
@@ -175,4 +180,5 @@ class TestGif:
         data, extension = strip_exif_and_optimize(original)
 
         assert extension == ".gif"
-        assert Image.open(io.BytesIO(data)).n_frames == len(frames)
+        image = Image.open(io.BytesIO(data))
+        assert image.n_frames == len(frames)
