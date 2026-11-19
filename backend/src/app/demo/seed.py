@@ -37,7 +37,7 @@ from app.core.enums import (
     UserRole,
 )
 from app.core.settings import settings
-from app.demo.images import listing_image
+from app.demo.images import listing_image, profile_picture
 from app.models.admin import AdminAction
 from app.models.conversation import Conversation
 from app.models.listing import Listing
@@ -99,6 +99,15 @@ def personas() -> tuple[Persona, ...]:
     )
 
 
+@cache
+def photo_credits() -> tuple[dict[str, Any], ...]:
+    """Attribution records for the real listing photos (``photos/credits.json``)."""
+    path = Path(__file__).parent / "photos" / "credits.json"
+    if not path.is_file():
+        return ()
+    return tuple(json.loads(path.read_text()))
+
+
 def persona_by_key(key: str) -> Persona | None:
     """Look up a persona by its public key (e.g. ``maya``)."""
     return next((p for p in personas() if p.key == key), None)
@@ -142,6 +151,14 @@ def _write_listing_image(listing_id: uuid.UUID, image_id: uuid.UUID, data: bytes
     return f"/uploads/images/{listing_id}/{filename}"
 
 
+def _write_profile_picture(user_id: uuid.UUID, data: bytes, ext: str) -> str:
+    directory = Path(settings.storage.profile_upload_dir) / str(user_id)
+    directory.mkdir(parents=True, exist_ok=True)
+    filename = f"profile.{ext}"  # same layout as core.storage.save_profile_picture
+    (directory / filename).write_bytes(data)
+    return f"/uploads/profiles/{user_id}/{filename}"
+
+
 def seed_demo_data(db: Session) -> list[Listing]:  # noqa: C901 - one linear load
     """Insert the seed into an empty database. Returns the seeded listings."""
     data = load_seed()
@@ -162,8 +179,11 @@ def seed_demo_data(db: Session) -> list[Listing]:  # noqa: C901 - one linear loa
             created_at=_ago(now, days=spec["joined_days_ago"]),
         )
         user.profile = Profile(
-            id=seed_uuid("profile", spec["key"]), name=spec["name"], campus=_CAMPUS
+            id=seed_uuid("profile", spec["key"]), name=spec.get("name"), campus=_CAMPUS
         )
+        avatar = profile_picture(spec["key"])
+        if avatar is not None:
+            user.profile.profile_picture_url = _write_profile_picture(user.id, *avatar)
         users[spec["key"]] = user
         db.add(user)
     db.flush()

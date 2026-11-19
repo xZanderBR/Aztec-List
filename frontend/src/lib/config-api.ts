@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/constants";
-import { AppConfig } from "@/types/config";
+import { AppConfig, PhotoCredit } from "@/types/config";
 
 /**
  * Fallback used until `/config` loads, or when the backend predates it: no demo mode,
@@ -33,4 +33,14 @@ export const getAppConfig = async (): Promise<AppConfig> => {
     demo: { ...demo, personas: Array.isArray(demo.personas) ? demo.personas : [] },
     ai: { ...DEFAULT_APP_CONFIG.ai, ...data.ai } as AppConfig["ai"],
   };
+};
+
+/** Fetch attribution for the demo listing photos. */
+export const getPhotoCredits = async (): Promise<PhotoCredit[]> => {
+  const res = await fetch(`${API_BASE_URL}/demo/credits`);
+  if (!res.ok) {
+    throw new Error(`Failed to load photo credits: ${res.status}`);
+  }
+  const data: unknown = await res.json();
+  return Array.isArray(data) ? (data as PhotoCredit[]) : [];
 };

@@ -1,11 +1,11 @@
 """
 Listing images for the demo seed.
 
-Each seeded listing gets generated placeholder "product cards" (a colored gradient with
-the title and category), so the repo ships no binary assets. To use real photos instead,
-drop files named ``{listing_key}-{n}.jpg`` (or .jpeg/.png/.webp, n starting at 1) into
-``app/demo/photos/``; they go through the same EXIF-stripping/resizing pipeline as user
-uploads.
+Seeded listings use the real photos in ``app/demo/photos/``, named ``{listing_key}-{n}.jpg``
+(or .jpeg/.png/.webp, n starting at 1); they go through the same EXIF-stripping/resizing
+pipeline as user uploads. A listing whose photo is missing falls back to a generated
+placeholder "product card" (a colored gradient with the title and category). Seeded users
+with a ``photos/avatars/{user_key}.*`` file get it as their profile picture.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from PIL import Image, ImageDraw, ImageFont
 from app.core.image_processing import MAX_IMAGE_HEIGHT, MAX_IMAGE_WIDTH, strip_exif_and_optimize
 
 PHOTOS_DIR = Path(__file__).parent / "photos"
+AVATARS_DIR = PHOTOS_DIR / "avatars"
 _PHOTO_SUFFIXES = (".jpg", ".jpeg", ".png", ".webp")
 
 # Soft two-tone gradients; picked deterministically per listing so resets look identical.
@@ -80,15 +81,28 @@ def render_placeholder(title: str, category: str, variant: int) -> bytes:
     return buffer.getvalue()
 
 
+def _processed(stem: Path, suffixes: tuple[str, ...]) -> tuple[bytes, str] | None:
+    """Return (processed bytes, extension without dot) for the first ``stem.<suffix>`` found."""
+    for suffix in suffixes:
+        path = stem.with_name(stem.name + suffix)
+        if path.is_file():
+            processed, extension = strip_exif_and_optimize(path.read_bytes())
+            return processed, extension.lstrip(".")  # ".jpg" -> "jpg"
+    return None
+
+
 def real_photo(listing_key: str, variant: int) -> tuple[bytes, str] | None:
     """Return (processed bytes, file extension) for a provided real photo, if any."""
-    for suffix in _PHOTO_SUFFIXES:
-        path = PHOTOS_DIR / f"{listing_key}-{variant}{suffix}"
-        if path.is_file():
-            processed, fmt = strip_exif_and_optimize(path.read_bytes())
-            ext = (fmt or "jpeg").lower()
-            return processed, "jpg" if ext == "jpeg" else ext
-    return None
+    return _processed(PHOTOS_DIR / f"{listing_key}-{variant}", _PHOTO_SUFFIXES)
+
+
+def profile_picture(user_key: str) -> tuple[bytes, str] | None:
+    """
+    Return (processed bytes, file extension) for ``photos/avatars/{user_key}.*``, if any.
+
+    Processed like a profile picture upload, so an animated GIF stays animated.
+    """
+    return _processed(AVATARS_DIR / user_key, (*_PHOTO_SUFFIXES, ".gif"))
 
 
 def listing_image(listing_key: str, title: str, category: str, variant: int) -> tuple[bytes, str]:
