@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { FlaskConical } from "lucide-react";
 import { useAppConfig } from "@/hooks/useAppConfig";
 
@@ -52,6 +53,12 @@ export function DemoBanner() {
       >
         View source
       </a>
+      <Link
+        href="/credits"
+        className="font-medium text-purple-600 underline-offset-4 hover:underline dark:text-purple-400"
+      >
+        Photo credits
+      </Link>
     </div>
   );
 }

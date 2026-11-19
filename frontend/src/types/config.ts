@@ -25,3 +25,16 @@ export interface AppConfig {
   demo: DemoConfig;
   ai: AIFeatures;
 }
+
+/** Attribution for one openly licensed demo listing photo (`GET /demo/credits`). */
+export interface PhotoCredit {
+  listing_key: string;
+  listing_title: string;
+  photo_title: string | null;
+  creator: string | null;
+  creator_url: string | null;
+  license: string;
+  license_version: string | null;
+  license_url: string | null;
+  source_url: string;
+}

@@ -77,11 +77,13 @@ visitor gets their own bucket behind the proxy.
 - **Seed data.** On first boot the API seeds `backend/src/app/demo/seed_data.json`:
   - three login personas (a seller, a buyer, a moderator)
   - background students
-  - 33 listings
+  - 29 listings
   - conversations, a pending scam report, a flagged listing and support tickets
 
-  Listing photos are generated placeholders. To use real photos, drop files into
-  `backend/src/app/demo/photos/` (see the README there).
+  Listing photos and profile pictures come from `backend/src/app/demo/photos/` (see the
+  README there). Photos that aren't the owner's own are openly licensed. Their
+  attribution is in `photos/credits.json`, served at `GET /api/v1/demo/credits` and shown
+  on the site's `/credits` page, which the demo banner links to.
 - **Login.** Visitors log in with `POST /api/v1/auth/demo/{persona}`. There is no
   password, signup or email. `GET /api/v1/config` lists the personas and the next reset
   time for the frontend.

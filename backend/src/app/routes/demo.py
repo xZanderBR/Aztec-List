@@ -18,7 +18,7 @@ from app.core.database import get_db
 from app.core.rate_limiter import limiter
 from app.core.settings import settings
 from app.demo import scheduler
-from app.demo.seed import persona_by_key, personas
+from app.demo.seed import persona_by_key, personas, photo_credits
 from app.models.user import User
 from app.schemas.demo import (
     AIFeatures,
@@ -26,6 +26,7 @@ from app.schemas.demo import (
     DemoConfig,
     DemoPersonaPublic,
     DemoResetResponse,
+    PhotoCredit,
 )
 from app.schemas.user import Token, UserPrivate
 
@@ -59,6 +60,12 @@ async def get_config() -> AppConfig:
         demo=demo,
         ai=AIFeatures(semantic_search=ai_on, assistant=ai_on, generate_description=ai_on),
     )
+
+
+@demo_router.get("/demo/credits", summary="Credits for the demo listing photos")
+async def get_photo_credits() -> list[PhotoCredit]:
+    """Attribution for the openly licensed photos used by the seeded demo listings."""
+    return [PhotoCredit.model_validate(credit) for credit in photo_credits()]
 
 
 @demo_router.post("/auth/demo/{persona_key}", summary="Log in as a demo persona")

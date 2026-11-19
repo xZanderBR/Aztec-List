@@ -40,3 +40,17 @@ class AppConfig(BaseModel):
 class DemoResetResponse(BaseModel):
     status: str
     next_reset_at: datetime
+
+
+class PhotoCredit(BaseModel):
+    """Attribution for one openly licensed demo listing photo."""
+
+    listing_key: str
+    listing_title: str
+    photo_title: str | None = None
+    creator: str | None = None
+    creator_url: str | None = None
+    license: str = Field(description="cc0, pdm, or by")
+    license_version: str | None = None
+    license_url: str | None = None
+    source_url: str = Field(description="The photo's page at its original host")

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.settings import settings
 from app.demo import scheduler
+from app.demo.images import AVATARS_DIR, PHOTOS_DIR
 from app.demo.seed import load_seed, persona_by_key, reset_demo_data, seed_demo_data, seed_uuid
 from app.models.conversation import Conversation
 from app.models.listing import Listing
@@ -171,6 +172,35 @@ class TestSeedAndReset:
             assert listing.thumbnail_url
             assert (uploads / listing.thumbnail_url.removeprefix("/uploads/images/")).is_file()
 
+    def test_listings_use_real_photos(self, seeded: Session, uploads: Path) -> None:
+        for spec in load_seed()["listings"]:
+            listing = seeded.get(Listing, seed_uuid("listing", spec["key"]))
+            assert listing is not None
+            assert len(listing.images) == spec["images"]
+            for variant in range(1, spec["images"] + 1):
+                assert any(PHOTOS_DIR.glob(f"{spec['key']}-{variant}.*")), spec["key"]
+            for image in listing.images:
+                name = image.url.rsplit("/", 1)[-1]
+                assert ".." not in name
+                assert (uploads / image.url.removeprefix("/uploads/images/")).is_file()
+
+    def test_avatars_become_profile_pictures(self, seeded: Session, uploads: Path) -> None:
+        profiles_dir = uploads.parent / "profiles"
+        with_avatar = {path.stem for path in AVATARS_DIR.iterdir()}
+        assert with_avatar == {"zanthar", "ued094"}
+        for spec in load_seed()["users"]:
+            user = seeded.get(User, seed_uuid("user", spec["key"]))
+            assert user is not None
+            url = user.profile.profile_picture_url
+            if spec["key"] not in with_avatar:
+                assert url is None
+                continue
+            assert (
+                url
+                == f"/uploads/profiles/{user.id}/profile.{'gif' if spec['key'] == 'zanthar' else 'jpg'}"
+            )
+            assert (profiles_dir / url.removeprefix("/uploads/profiles/")).is_file()
+
     def test_reset_restores_seed(self, seeded: Session, uploads: Path) -> None:
         listing_count = _count(seeded, Listing)
         seeded.delete(seeded.get(Listing, seed_uuid("listing", "maya-desk")))
@@ -199,6 +229,25 @@ class TestSeedAndReset:
         )
         response = client.post(f"{API}/demo/reset", headers={"X-Demo-Reset-Token": "s3cret"})
         assert response.status_code == 202
+
+
+@pytest.mark.integration
+class TestPhotoCredits:
+    def test_credits_cover_stock_photos(self, client: TestClient) -> None:
+        response = client.get(f"{API}/demo/credits")
+        assert response.status_code == 200
+        credits = response.json()
+        assert credits
+        titles = {spec["key"]: spec["title"] for spec in load_seed()["listings"]}
+        keys = [credit["listing_key"] for credit in credits]
+        assert len(keys) == len(set(keys))
+        for credit in credits:
+            assert credit["listing_title"] == titles[credit["listing_key"]]
+            assert credit["license"] in {"cc0", "pdm", "by"}
+            assert credit["source_url"].startswith("https://")
+            if credit["license"] == "by":  # CC BY requires naming the author
+                assert credit["creator"]
+            assert any(PHOTOS_DIR.glob(f"{credit['listing_key']}-1.*"))
 
 
 @pytest.mark.unit
