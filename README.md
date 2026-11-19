@@ -12,11 +12,11 @@ Aztec List is an OfferUp-style marketplace for college students. Students can po
 
 [azteclist.com](https://azteclist.com) is a sandbox: pick a sample account on the login page instead of signing up.
 
-- **Maya** (seller) has listings and buyers messaging her.
+- **zanthar** (seller) has listings and buyers messaging about them.
 - **Jordan** (buyer) has a few conversations going, including a suspicious one to report.
-- **Alex** (moderator) can review flagged listings, message reports and support tickets.
+- **Alex** (moderator) can review message reports and support tickets, and flag listings.
 
-Post a listing with photos, chat in real time, try **Smart search** (semantic search, e.g. "gta" or "keep drinks cold in my room") or the **Ask AI** shopping assistant. All data resets to the sample set every few hours.
+Post a listing with photos, chat in real time, try **Smart search** (semantic search, e.g. "gta" or "something warm for my feet") or the **Ask AI** shopping assistant. All data resets to the sample set every few hours.
 
 The demo runs on Vercel (frontend) and a single Fly.io machine (API), with embeddings from Cloudflare Workers AI and Claude Haiku for the assistant. See [docs/11-deployment.md](docs/11-deployment.md).
 

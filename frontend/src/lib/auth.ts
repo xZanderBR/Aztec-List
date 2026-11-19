@@ -25,7 +25,7 @@ export const BANNED_HANDLED_KEY = "banned_handler_called" as const;
 /**
  * Log in as a seeded demo persona (sandbox demo deployments only).
  *
- * @param personaKey - Persona key from `GET /config` (e.g. "maya")
+ * @param personaKey - Persona key from `GET /config` (e.g. "zanthar")
  * @returns AuthToken with access token and user data
  * @throws Error if demo mode is off or the persona is unknown
  */
