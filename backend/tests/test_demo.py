@@ -72,7 +72,7 @@ class TestConfig:
     def test_demo_on_lists_personas(self, client: TestClient, demo_on: None) -> None:  # noqa: ARG002
         body = client.get(f"{API}/config").json()
         assert body["demo"]["enabled"] is True
-        assert [p["key"] for p in body["demo"]["personas"]] == ["maya", "jordan", "admin"]
+        assert [p["key"] for p in body["demo"]["personas"]] == ["zanthar", "jordan", "admin"]
         reset_at = datetime.fromisoformat(body["demo"]["next_reset_at"])
         assert reset_at > datetime.now(UTC)
 
@@ -80,15 +80,15 @@ class TestConfig:
 @pytest.mark.integration
 class TestDemoLogin:
     def test_not_found_when_demo_off(self, client: TestClient) -> None:
-        assert client.post(f"{API}/auth/demo/maya").status_code == 404
+        assert client.post(f"{API}/auth/demo/zanthar").status_code == 404
 
     def test_unknown_persona(self, client: TestClient, seeded: Session) -> None:  # noqa: ARG002
         assert client.post(f"{API}/auth/demo/nobody").status_code == 404
 
     def test_token_works_for_persona(self, client: TestClient, seeded: Session) -> None:  # noqa: ARG002
-        me = client.get(f"{API}/users/me", headers=_login(client, "maya"))
+        me = client.get(f"{API}/users/me", headers=_login(client, "zanthar"))
         assert me.status_code == 200
-        assert me.json()["username"] == persona_by_key("maya").username
+        assert me.json()["username"] == persona_by_key("zanthar").username
 
     def test_admin_persona_is_admin(self, client: TestClient, seeded: Session) -> None:  # noqa: ARG002
         response = client.get(f"{API}/admin/actions", headers=_login(client, "admin"))
@@ -131,9 +131,9 @@ class TestGuards:
         assert response.status_code == 403
 
     def test_admin_cannot_ban_persona(self, client: TestClient, seeded: Session) -> None:  # noqa: ARG002
-        maya_id = seed_uuid("user", "maya")
+        seller_id = seed_uuid("user", "zanthar")
         response = client.post(
-            f"{API}/admin/users/{maya_id}/ban",
+            f"{API}/admin/users/{seller_id}/ban",
             json={"reason": "test"},
             headers=_login(client, "admin"),
         )
@@ -164,9 +164,7 @@ class TestSeedAndReset:
         assert _count(seeded, Listing) == len(data["listings"])
         assert _count(seeded, Conversation) == len(data["conversations"])
         assert _count(seeded, MessageReport) == len(data["message_reports"])
-        flagged = seeded.get(Listing, seed_uuid("listing", "deals-phone"))
-        assert flagged is not None
-        assert not flagged.is_active
+        assert all(listing.is_active for listing in seeded.scalars(select(Listing)))
         # every listing has its thumbnail on disk
         for listing in seeded.scalars(select(Listing)):
             assert listing.thumbnail_url
@@ -187,7 +185,7 @@ class TestSeedAndReset:
     def test_avatars_become_profile_pictures(self, seeded: Session, uploads: Path) -> None:
         profiles_dir = uploads.parent / "profiles"
         with_avatar = {path.stem for path in AVATARS_DIR.iterdir()}
-        assert with_avatar == {"zanthar", "ued094"}
+        assert with_avatar == {"zanthar", "yellowgt3"}
         for spec in load_seed()["users"]:
             user = seeded.get(User, seed_uuid("user", spec["key"]))
             assert user is not None
@@ -203,7 +201,7 @@ class TestSeedAndReset:
 
     def test_reset_restores_seed(self, seeded: Session, uploads: Path) -> None:
         listing_count = _count(seeded, Listing)
-        seeded.delete(seeded.get(Listing, seed_uuid("listing", "maya-desk")))
+        seeded.delete(seeded.get(Listing, seed_uuid("listing", "spongebob-cologne")))
         seeded.commit()
         stray = uploads / "visitor-upload" / "junk.jpg"
         stray.parent.mkdir(parents=True)
@@ -212,7 +210,7 @@ class TestSeedAndReset:
         reset_demo_data(seeded)
 
         assert _count(seeded, Listing) == listing_count
-        assert seeded.get(Listing, seed_uuid("listing", "maya-desk")) is not None
+        assert seeded.get(Listing, seed_uuid("listing", "spongebob-cologne")) is not None
         assert not stray.exists()
 
     def test_reset_endpoint_requires_token(
@@ -229,25 +227,6 @@ class TestSeedAndReset:
         )
         response = client.post(f"{API}/demo/reset", headers={"X-Demo-Reset-Token": "s3cret"})
         assert response.status_code == 202
-
-
-@pytest.mark.integration
-class TestPhotoCredits:
-    def test_credits_cover_stock_photos(self, client: TestClient) -> None:
-        response = client.get(f"{API}/demo/credits")
-        assert response.status_code == 200
-        credits = response.json()
-        assert credits
-        titles = {spec["key"]: spec["title"] for spec in load_seed()["listings"]}
-        keys = [credit["listing_key"] for credit in credits]
-        assert len(keys) == len(set(keys))
-        for credit in credits:
-            assert credit["listing_title"] == titles[credit["listing_key"]]
-            assert credit["license"] in {"cc0", "pdm", "by"}
-            assert credit["source_url"].startswith("https://")
-            if credit["license"] == "by":  # CC BY requires naming the author
-                assert credit["creator"]
-            assert any(PHOTOS_DIR.glob(f"{credit['listing_key']}-1.*"))
 
 
 @pytest.mark.unit

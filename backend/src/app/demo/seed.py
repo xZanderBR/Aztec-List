@@ -99,17 +99,8 @@ def personas() -> tuple[Persona, ...]:
     )
 
 
-@cache
-def photo_credits() -> tuple[dict[str, Any], ...]:
-    """Attribution records for the real listing photos (``photos/credits.json``)."""
-    path = Path(__file__).parent / "photos" / "credits.json"
-    if not path.is_file():
-        return ()
-    return tuple(json.loads(path.read_text()))
-
-
 def persona_by_key(key: str) -> Persona | None:
-    """Look up a persona by its public key (e.g. ``maya``)."""
+    """Look up a persona by its public key (e.g. ``zanthar``)."""
     return next((p for p in personas() if p.key == key), None)
 
 

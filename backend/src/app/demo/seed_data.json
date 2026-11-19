@@ -1,31 +1,25 @@
 {
   "personas": [
     {
-      "key": "maya",
-      "user": "maya",
+      "key": "zanthar",
+      "user": "zanthar",
       "role": "seller",
-      "blurb": "Computer Engineering junior selling her old desk setup and dorm gear. Has buyers messaging her."
+      "blurb": "Selling colognes, a WhatsApp fragrance and a Bape hoodie, with buyers already messaging."
     },
     {
       "key": "jordan",
       "user": "jordan",
       "role": "buyer",
-      "blurb": "Freshman furnishing a dorm on a budget, with a few conversations going (including a sketchy one)."
+      "blurb": "Freshman hunting for deals, with a few conversations going (including a sketchy one)."
     },
     {
       "key": "admin",
       "user": "alex",
       "role": "moderator",
-      "blurb": "Campus moderator. Reviews flagged listings, message reports and support tickets."
+      "blurb": "Campus moderator. Reviews message reports and support tickets, and can flag listings."
     }
   ],
   "users": [
-    {
-      "key": "maya",
-      "username": "maya_r",
-      "name": "Maya Rodriguez",
-      "joined_days_ago": 210
-    },
     {
       "key": "jordan",
       "username": "jordan_l",
@@ -38,30 +32,6 @@
       "name": "Alex Kim",
       "joined_days_ago": 400,
       "admin": true
-    },
-    {
-      "key": "priya",
-      "username": "priya_s",
-      "name": "Priya Shah",
-      "joined_days_ago": 320
-    },
-    {
-      "key": "marcus",
-      "username": "marcus_t",
-      "name": "Marcus Thompson",
-      "joined_days_ago": 150
-    },
-    {
-      "key": "sofia",
-      "username": "sofia_g",
-      "name": "Sofia Garcia",
-      "joined_days_ago": 95
-    },
-    {
-      "key": "ethan",
-      "username": "ethan_w",
-      "name": "Ethan Wong",
-      "joined_days_ago": 500
     },
     {
       "key": "deals",
@@ -94,146 +64,13 @@
       "joined_days_ago": 180
     },
     {
-      "key": "ued094",
-      "username": "UED094",
+      "key": "yellowgt3",
+      "username": "yellowgt3",
       "name": null,
       "joined_days_ago": 260
     }
   ],
   "listings": [
-    {
-      "key": "maya-desk",
-      "seller": "maya",
-      "title": "IKEA Micke desk (white)",
-      "price": 45,
-      "category": "furniture",
-      "condition": "good",
-      "days_ago": 3,
-      "images": 1,
-      "description": "Compact white desk with a drawer and a cable outlet. Fits the Chapultepec and Granada dorm rooms perfectly. Light scuffs on the top. Pickup near the Trolley stop."
-    },
-    {
-      "key": "maya-monitor",
-      "seller": "maya",
-      "title": "27\" Dell gaming monitor (1440p, 165Hz)",
-      "price": 140,
-      "category": "electronics",
-      "condition": "like_new",
-      "days_ago": 5,
-      "images": 1,
-      "description": "Dell S2721DGF, barely used since I moved to a laptop-only setup. Comes with the original stand and a DisplayPort cable."
-    },
-    {
-      "key": "maya-calc",
-      "seller": "maya",
-      "title": "TI-84 Plus CE graphing calculator",
-      "price": 60,
-      "category": "electronics",
-      "condition": "good",
-      "days_ago": 8,
-      "images": 1,
-      "description": "Got me through Calc 1-3 and Linear Algebra. Rechargeable over USB, case included."
-    },
-    {
-      "key": "priya-ochem",
-      "seller": "priya",
-      "title": "Organic Chemistry (Klein, 4th edition)",
-      "price": 55,
-      "category": "textbooks",
-      "condition": "good",
-      "days_ago": 2,
-      "images": 1,
-      "description": "For the organic chemistry sequence. Light pencil notes in the margins, solutions manual included."
-    },
-    {
-      "key": "priya-fridge",
-      "seller": "priya",
-      "title": "Mini fridge with freezer box (3.1 cu ft)",
-      "price": 80,
-      "category": "appliances",
-      "condition": "good",
-      "days_ago": 4,
-      "images": 1,
-      "description": "Keeps drinks cold and fits under a lofted bed. Cleaned and defrosted, ready to go."
-    },
-    {
-      "key": "marcus-bike",
-      "seller": "marcus",
-      "title": "Road bike, 54cm aluminum frame",
-      "price": 260,
-      "category": "bicycles",
-      "condition": "good",
-      "days_ago": 1,
-      "images": 1,
-      "description": "Shimano Claris groupset, new tires and brake pads last month. Great for commuting to campus."
-    },
-    {
-      "key": "sofia-switch",
-      "seller": "sofia",
-      "title": "Nintendo Switch OLED with two games",
-      "price": 240,
-      "category": "video_games",
-      "condition": "like_new",
-      "days_ago": 2,
-      "images": 1,
-      "description": "White OLED model with dock and two Joy-Cons, plus Mario Kart 8 and Animal Crossing. Screen protector since day one."
-    },
-    {
-      "key": "sofia-guitar",
-      "seller": "sofia",
-      "title": "Yamaha FG800 acoustic guitar",
-      "price": 110,
-      "category": "musical_instruments",
-      "condition": "good",
-      "days_ago": 16,
-      "images": 1,
-      "description": "Comes with a gig bag, spare strings and a capo. A great beginner guitar."
-    },
-    {
-      "key": "ethan-tickets",
-      "seller": "ethan",
-      "title": "Two student tickets: Aztecs football vs. Fresno State",
-      "price": 30,
-      "category": "tickets",
-      "condition": "new",
-      "days_ago": 1,
-      "images": 1,
-      "description": "Two student-section seats for Saturday's home game. Price is for both, transferable through the ticket app."
-    },
-    {
-      "key": "ethan-tutoring",
-      "seller": "ethan",
-      "title": "Python and Java tutoring for intro CS",
-      "price": 25,
-      "category": "services",
-      "condition": "new",
-      "days_ago": 6,
-      "images": 1,
-      "description": "Senior CS student, $25 an hour. Help with labs, debugging and exam prep. Meet at the library or over Zoom."
-    },
-    {
-      "key": "jordan-shelf",
-      "seller": "jordan",
-      "title": "Small three-shelf bookcase",
-      "price": 15,
-      "category": "furniture",
-      "condition": "fair",
-      "days_ago": 4,
-      "images": 1,
-      "description": "Some wear on the corners. Making room for a desk, so it needs to go this week."
-    },
-    {
-      "key": "deals-phone",
-      "seller": "deals",
-      "title": "iPhone 16 Pro Max, brand new, $150",
-      "price": 150,
-      "category": "electronics",
-      "condition": "new",
-      "days_ago": 1,
-      "images": 1,
-      "description": "Brand new, sealed, no box. Cash app or gift cards only. Can't meet in person, I ship same day.",
-      "flag_reason": "Price far below market and payment requested in gift cards (likely scam)."
-    },
     {
       "key": "stapler",
       "seller": "dude",
@@ -368,7 +205,7 @@
     },
     {
       "key": "phone-case",
-      "seller": "ued094",
+      "seller": "yellowgt3",
       "title": "Yellow phone case",
       "price": 15,
       "category": "accessories",
@@ -379,7 +216,7 @@
     },
     {
       "key": "porsche",
-      "seller": "ued094",
+      "seller": "yellowgt3",
       "title": "2023 Porsche 911 GT3",
       "price": 281990,
       "category": "other",
@@ -390,7 +227,7 @@
     },
     {
       "key": "python-dummies",
-      "seller": "ued094",
+      "seller": "yellowgt3",
       "title": "Python for Dummies",
       "price": 15,
       "category": "textbooks",
@@ -412,7 +249,7 @@
     },
     {
       "key": "gta-collector",
-      "seller": "ued094",
+      "seller": "yellowgt3",
       "title": "Grand Theft Auto V - Collector's Edition",
       "price": 300,
       "category": "video_games",
@@ -424,69 +261,69 @@
   ],
   "conversations": [
     {
-      "key": "jordan-maya",
+      "key": "jordan-zanthar",
       "users": [
         "jordan",
-        "maya"
+        "zanthar"
       ],
       "messages": [
         {
           "from": "jordan",
           "minutes_ago": 300,
-          "text": "Hi! Is the IKEA desk still available?"
+          "text": "Is the Spongebob cologne still available?"
         },
         {
-          "from": "maya",
+          "from": "zanthar",
           "minutes_ago": 290,
-          "text": "Yes it is! Are you on campus this week?"
+          "text": "Yep, still new in the box."
         },
         {
           "from": "jordan",
           "minutes_ago": 280,
-          "text": "I'm in Chapultepec. Could I pick it up Thursday after 4?"
+          "text": "Could I pick it up Thursday after 4? I'm by the library."
         },
         {
-          "from": "maya",
-          "minutes_ago": 275,
-          "text": "Thursday at 4:30 works. I can meet you by the Trolley stop."
+          "from": "zanthar",
+          "minutes_ago": 270,
+          "text": "Thursday at 4:30 works. See you there."
         }
       ]
     },
     {
-      "key": "jordan-priya",
+      "key": "dude-zanthar",
+      "users": [
+        "dude",
+        "zanthar"
+      ],
+      "messages": [
+        {
+          "from": "dude",
+          "minutes_ago": 200,
+          "text": "$500 for a hoodie in poor condition? Would you do $300?"
+        },
+        {
+          "from": "zanthar",
+          "minutes_ago": 190,
+          "text": "It's a real Bape shark hoodie. Lowest I'd go is $450."
+        }
+      ]
+    },
+    {
+      "key": "jordan-passengerprincess",
       "users": [
         "jordan",
-        "priya"
+        "passengerprincess"
       ],
       "messages": [
         {
           "from": "jordan",
-          "minutes_ago": 1500,
-          "text": "Would you take $65 for the mini fridge?"
+          "minutes_ago": 160,
+          "text": "Would you take $150 for the Labubu?"
         },
         {
-          "from": "priya",
-          "minutes_ago": 1440,
-          "text": "I could do $70 if you can pick it up this weekend."
-        }
-      ]
-    },
-    {
-      "key": "marcus-maya",
-      "users": [
-        "marcus",
-        "maya"
-      ],
-      "messages": [
-        {
-          "from": "marcus",
-          "minutes_ago": 2900,
-          "text": "Does the monitor come with the stand?"
-        },
-        {
-          "from": "maya",
-          "minutes_ago": 2880,
-          "text": "Yep, the original stand and a DisplayPort cable."
+          "from": "passengerprincess",
+          "minutes_ago": 150,
+          "text": "I could do $180 if you pick it up this weekend."
         }
       ]
     },
@@ -501,7 +338,7 @@
           "key": "scam-1",
           "from": "deals",
           "minutes_ago": 120,
-          "text": "hey saw u looking at phones. pay with gift card and i ship today, super cheap"
+          "text": "hey saw u looking at labubus. i got a secret rare one, pay with gift card and i ship today, super cheap"
         },
         {
           "from": "jordan",
@@ -534,11 +371,11 @@
       "message": "When I add photos to a listing from my iPhone, the progress bar stops at 90%."
     },
     {
-      "user": "sofia",
+      "user": "dude",
       "subject": "How do I mark a listing as sold?",
       "status": "resolved",
       "days_ago": 6,
-      "message": "I sold my calculator. Should I delete the listing or is there a sold button?"
+      "message": "I sold my AirPods. Should I delete the listing or is there a sold button?"
     }
   ]
 }
